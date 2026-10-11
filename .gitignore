@@ -13,3 +13,9 @@ __pycache__/
 .idea/
 .DS_Store
 *:Zone.Identifier
+
+# Kiosk
+.unlock_pin
+.kiosk-profile/
+server.log
+server.err.log

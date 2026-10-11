@@ -32,9 +32,33 @@ Your home Wi-Fi must be set to a **Private** network in Windows settings.
 .\start.ps1
 ```
 
-On first run it creates the venv and pairs with the TV if needed, then prints
-the address to open on the iPad (e.g. `http://192.168.10.50:8000`). In Safari,
+On first run it creates the venv, pairs with the TV if needed and asks you to
+choose an unlock PIN. It starts the server in the background, prints the
+address to open on the iPad (e.g. `http://192.168.10.50:8000`), then locks the
+PC into the full-screen remote. Use `.\start.ps1 -NoKiosk` to only start the server. In Safari,
 use Share > **Add to Home Screen** so it opens like an app.
+
+While a channel is changing, every button is locked (greyed out with a 🔒, and
+the channel being tuned pulses orange) on every device viewing the page, until
+the TV has finished. A change that takes over two minutes is abandoned and the
+buttons unlock again.
+
+### Kiosk mode (locking the PC to the remote)
+
+The PC shows the remote in full-screen Edge with no address bar or tabs. If it
+is closed (e.g. Alt+F4) it reopens within a second, and it is pulled back in
+front if anything else opens on top.
+
+**To unlock:** press and hold the "Thatha TV" title for 5 seconds, enter the
+PIN on the number pad and tap OK. The remote closes and the PC works normally;
+the iPad keeps working. Run `.\start.ps1` again to lock it. Three wrong PINs
+lock the pad for a minute. The PIN is stored in `.unlock_pin`; delete that
+file and rerun `start.ps1` to choose a new one. If the server stops, kiosk
+mode exits on its own after about 10 seconds.
+
+Ctrl+Alt+Del still works, so the PC can always be recovered. To start the
+remote automatically at sign-in, put a shortcut to
+`powershell -ExecutionPolicy Bypass -File <repo>\start.ps1` in `shell:startup`.
 
 If PowerShell blocks the script, allow local scripts once:
 
