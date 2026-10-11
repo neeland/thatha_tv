@@ -1,8 +1,9 @@
 import asyncio
 import sys
+import time
 from pathlib import Path
 from aiowebostv import WebOsClient
-from wakeonlan import send_magic_packet
+from wakeonlan import wake
 
 TV_IP, TV_MAC = "192.168.10.232", "F4:14:BF:E7:D2:7C"
 DSTV_ID = "com.multichoice.tvapp"
@@ -20,6 +21,11 @@ CHANNELS = {
     "213": (18, 1),
 }
 
+def power_on():
+    """Wake the TV over the network (does nothing if it's already on). Sent a few times as Wi-Fi can drop one."""
+    for _ in range(3):
+        wake(TV_MAC); wake(TV_MAC, host=TV_IP.rsplit(".", 1)[0] + ".255"); time.sleep(0.5)
+
 async def press(tv, keys, delay=1):
     for key in keys:
         await tv.button(key); await asyncio.sleep(delay)
@@ -32,7 +38,7 @@ async def go_home(tv, attempts=3):
     raise RuntimeError(f"Could not reach Home screen (TV is on {tv.tv_state.current_app_id!r})")
 
 async def main(channel):
-    send_magic_packet(TV_MAC); await asyncio.sleep(8)
+    power_on(); await asyncio.sleep(8)
     tv = WebOsClient(TV_IP, CLIENT_KEY, connect_timeout=15)
     await tv.connect()
     try:
@@ -53,6 +59,8 @@ async def main(channel):
         await tv.disconnect()
 
 if __name__ == "__main__":
+    if sys.argv[1:] == ["on"]:
+        sys.exit(power_on())
     channel = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_CHANNEL
     if channel not in CHANNELS:
         sys.exit(f"Unknown channel {channel!r}, choose from: {', '.join(CHANNELS)}")

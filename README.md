@@ -24,8 +24,9 @@ are set at the top of `live_tv.py`, `remote.py` and `pair.py`.
 
 ## Running the remote
 
-Double-click the **Thatha TV** desktop icon (or run `.\start.ps1`). It starts
-the server in the background and locks the PC into the full-screen remote.
+Double-click the **Thatha TV** desktop icon (or run `.\start.ps1`). It updates
+to the latest version from GitHub (restarting the server if anything changed),
+turns the TV on, starts the server in the background and locks the PC into the full-screen remote.
 Clicking it again while it is running does nothing. Use `.\start.ps1 -NoKiosk`
 to only start the server.
 

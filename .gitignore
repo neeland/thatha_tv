@@ -20,3 +20,4 @@ __pycache__/
 server.log
 server.err.log
 thatha_tv.ico
+.server-version
