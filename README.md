@@ -38,8 +38,10 @@ takes over two minutes is abandoned and the buttons unlock again.
 
 The PC shows the remote in full-screen Edge with no address bar or tabs. If it
 is closed (e.g. Alt+F4) it reopens within a second, and it is pulled back in
-front if anything else opens on top. While the remote is showing, the PC does
-not sleep, turn off the screen or lock itself.
+front if anything else opens on top. To save power the screen turns off
+when idle (after 5 minutes by default); moving the mouse or tapping brings the
+remote straight back. The PC never asks to sign in again and, plugged in, never
+goes to standby, so the remote keeps running (`install-shortcut.ps1` sets this up).
 
 **To unlock:** press and hold the "Thatha TV" title for 5 seconds, enter the
 PIN on the number pad and tap OK. The remote closes and the PC works normally.

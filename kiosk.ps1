@@ -15,16 +15,20 @@ $edgeArgs = @("--kiosk", "$url/?kiosk", "--edge-kiosk-type=fullscreen", "--no-fi
               "--user-data-dir=`"$profileDir`"")
 $shell = New-Object -ComObject WScript.Shell
 
-# Keep the PC awake with the screen on while the remote is showing, so Windows never
-# sleeps or locks the screen (the iPad needs the PC awake too). Cleared when this script exits.
+# Keep the PC out of standby while the remote is showing, so it keeps running. The screen may
+# still turn off to save power; a mouse move or tap brings it back. Cleared when this script exits.
 Add-Type -Name Power -Namespace Win32 -MemberDefinition '[DllImport("kernel32.dll")] public static extern uint SetThreadExecutionState(uint f);'
-[void][Win32.Power]::SetThreadExecutionState(0x80000003)   # ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED
+[void][Win32.Power]::SetThreadExecutionState(0x80000001)   # ES_CONTINUOUS | ES_SYSTEM_REQUIRED
 
-# Main Edge process using the kiosk profile (child processes have --type=)
+# Main Edge process using the kiosk profile (child processes have --type=). The process search
+# is slow, so its id is remembered and only looked up again once that process has gone.
+$browserId = $null
 function KioskBrowser {
-    Get-CimInstance Win32_Process -Filter "Name = 'msedge.exe'" |
+    if ($script:browserId -and (Get-Process -Id $script:browserId -ErrorAction SilentlyContinue)) { return $script:browserId }
+    $script:browserId = Get-CimInstance Win32_Process -Filter "Name = 'msedge.exe'" |
         Where-Object { $_.CommandLine -like "*$profileDir*" -and $_.CommandLine -notlike "*--type=*" } |
-        Select-Object -First 1
+        Select-Object -First 1 -ExpandProperty ProcessId
+    $script:browserId
 }
 
 # Server down for 10s counts as unlocked, so a crash never traps the PC on an error page
@@ -40,7 +44,7 @@ while (Locked) {
         Start-Process $edge -ArgumentList $edgeArgs     # closed (e.g. Alt+F4): bring it straight back
         Start-Sleep 3
     } else {
-        [void]$shell.AppActivate([int]$browser.ProcessId)  # pull it in front of anything opened on top
+        [void]$shell.AppActivate([int]$browser)         # pull it in front of anything opened on top
     }
     Start-Sleep 1
 }

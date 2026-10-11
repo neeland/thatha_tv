@@ -134,4 +134,15 @@ public static class DesktopIcons {
 "@
 for ($i = 0; $i -lt 10 -and -not [DesktopIcons]::MoveTopRight("Thatha TV"); $i++) { Start-Sleep 1 }
 
+# Never ask to sign in again when the screen comes back on or the PC wakes, so the remote is
+# always one tap away. The screen still turns off when idle to save power, but plugged in the
+# PC never goes to standby or hibernates, so the remote keeps running.
+Set-ItemProperty 'HKCU:\Control Panel\Desktop' DelayLockInterval 0xFFFFFFFF -Type DWord   # "If you've been away": Never
+$power = 'powercfg /setacvalueindex SCHEME_CURRENT SUB_NONE CONSOLELOCK 0; ' +
+         'powercfg /setdcvalueindex SCHEME_CURRENT SUB_NONE CONSOLELOCK 0; ' +
+         'powercfg /change standby-timeout-ac 0; powercfg /change hibernate-timeout-ac 0; powercfg /setactive SCHEME_CURRENT'
+Write-Host "Changing power settings - click Yes on the Windows prompt"
+Start-Process powershell -Verb RunAs -Wait -WindowStyle Hidden -ArgumentList "-NoProfile -EncodedCommand",
+    ([Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($power)))
+
 if ($Startup) { MakeShortcut (Join-Path ([Environment]::GetFolderPath('Startup')) "Thatha TV.lnk") }
