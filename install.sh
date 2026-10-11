@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Sets up the venv, pairs with the TV if needed, and runs the keypad listener
-# as a service that starts when the Pi boots.
+# Sets up the venv, pairs with the TV and maps the remote's buttons if needed,
+# then runs the listener as a service that starts when the Pi boots.
 set -euo pipefail
 cd "$(dirname "$0")"
 DIR="$(pwd)"
@@ -13,9 +13,15 @@ if [ ! -f .lgtv_client_key ]; then
     .venv/bin/python pair.py
 fi
 
+if [ ! -f buttons.json ]; then
+    sudo systemctl stop thatha-tv 2>/dev/null || true
+    echo "Now set up the remote's buttons (point it at the Flirc receiver)."
+    .venv/bin/python learn.py
+fi
+
 sudo tee /etc/systemd/system/thatha-tv.service > /dev/null <<UNIT
 [Unit]
-Description=Thatha TV keypad
+Description=Thatha TV remote
 Wants=network-online.target
 After=network-online.target
 
@@ -23,7 +29,7 @@ After=network-online.target
 User=$(whoami)
 SupplementaryGroups=input
 WorkingDirectory=$DIR
-ExecStart=$DIR/.venv/bin/python $DIR/keypad.py
+ExecStart=$DIR/.venv/bin/python $DIR/buttons.py
 Restart=always
 RestartSec=5
 
@@ -35,4 +41,4 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now thatha-tv
 sudo systemctl restart thatha-tv
 
-echo "Keypad listener running. Plug in the keypad's USB receiver and type a channel number."
+echo "Remote running. Press a channel button to try it."
