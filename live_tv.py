@@ -29,29 +29,34 @@ async def go_home(tv, attempts=3):
         await press(tv, ["HOME"], delay=2)
         if tv.tv_state.current_app_id == HOME_ID:
             return
-    sys.exit(f"Could not reach Home screen (TV is on {tv.tv_state.current_app_id!r})")
+    raise RuntimeError(f"Could not reach Home screen (TV is on {tv.tv_state.current_app_id!r})")
 
 async def main(channel):
     send_magic_packet(TV_MAC); await asyncio.sleep(8)
     tv = WebOsClient(TV_IP, CLIENT_KEY, connect_timeout=15)
     await tv.connect()
-    await go_home(tv)                                     # always start from Home, whatever is on screen
-    try:                                                  # restart DStv so we always start from the same screen
-        await tv.close_app(DSTV_ID); await asyncio.sleep(3)
-    except Exception:
-        pass                                              # wasn't running
-    await tv.launch_app(DSTV_ID); await asyncio.sleep(10)  # DStv
-    await press(tv, ["ENTER"], delay=5)                   # Dad profile (assumed highlighted)
-    await press(tv, ["LEFT", "DOWN", "DOWN", "ENTER"])    # Live TV
-    await asyncio.sleep(5)                                # let Live TV load
-    await press(tv, ["RIGHT", "DOWN"])                    # (opens on Recently watched) > All channels > 101
-    downs, rights = CHANNELS[channel]
-    await press(tv, ["DOWN"] * downs + ["RIGHT"] * rights, delay=0.5)
-    await press(tv, ["ENTER"])                            # play channel
-    await tv.disconnect()
+    try:
+        await go_home(tv)                                 # always start from Home, whatever is on screen
+        try:                                              # restart DStv so we always start from the same screen
+            await tv.close_app(DSTV_ID); await asyncio.sleep(3)
+        except Exception:
+            pass                                          # wasn't running
+        await tv.launch_app(DSTV_ID); await asyncio.sleep(10)  # DStv
+        await press(tv, ["ENTER"], delay=5)               # Dad profile (assumed highlighted)
+        await press(tv, ["LEFT", "DOWN", "DOWN", "ENTER"]) # Live TV
+        await asyncio.sleep(5)                            # let Live TV load
+        await press(tv, ["RIGHT", "DOWN"])                # (opens on Recently watched) > All channels > 101
+        downs, rights = CHANNELS[channel]
+        await press(tv, ["DOWN"] * downs + ["RIGHT"] * rights, delay=0.5)
+        await press(tv, ["ENTER"])                        # play channel
+    finally:
+        await tv.disconnect()
 
 if __name__ == "__main__":
     channel = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_CHANNEL
     if channel not in CHANNELS:
         sys.exit(f"Unknown channel {channel!r}, choose from: {', '.join(CHANNELS)}")
-    asyncio.run(main(channel))
+    try:
+        asyncio.run(main(channel))
+    except RuntimeError as err:
+        sys.exit(str(err))
