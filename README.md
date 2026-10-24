@@ -55,10 +55,19 @@ after a `git pull`. The TV IP and MAC are at the top of `live_tv.py`,
 
 ## Using it
 
-- Press a channel's button. The TV turns on if needed and shows
-  "Changing to 203... please wait". It takes about 45 seconds.
+- Press a channel's button. The TV turns on if needed and counts down with
+  "⏳ CHANGING TO CHANNEL 203 · PLEASE WAIT 9 SECONDS ⏳" messages. If DStv is
+  already playing a channel the Pi tuned, it takes about 10 seconds; otherwise
+  (TV was off, or DStv was used by hand) it restarts DStv first, about 40.
 - Buttons pressed while it's changing are ignored, and the TV says "Please wait".
 - A button that isn't set up shows "That button is not set up".
+
+Every step waits for the TV screen to show what it expects (the TV takes a
+screenshot in about 0.1s, see `screen.py`): keys are only sent once the
+channel grid has a highlighted tile, because keys sent while it's still
+opening can hang the DStv app. The channel number on the player banner is read
+back to confirm the change, and a wrong landing is corrected with a second
+hop. `.last_channel` holds the channel last seen playing.
 
 ## Changing which button does what
 
@@ -90,3 +99,5 @@ Run `.venv/bin/python remote.py` over SSH to drive the TV from your keyboard
 pressed, so you can find a channel's position in Live TV > All channels and
 add it to `CHANNELS` in `live_tv.py` as `(downs, rights)` counted from 101.
 Then teach the Flirc a new button and re-run `learn.py`.
+If its banner has a digit `screen.py` can't read yet, `live_tv.py` saves the
+frame to `unread_banner.png`; add the digit's shape to `DIGITS` in `screen.py`.

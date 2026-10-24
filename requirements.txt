@@ -1,3 +1,5 @@
 aiowebostv==0.10.0
 evdev==1.9.3
+numpy==2.5.4
+pillow==13.0.0
 wakeonlan==4.0.0
