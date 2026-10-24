@@ -1,0 +1,2 @@
+aiowebostv==0.10.0
+wakeonlan==4.0.0
