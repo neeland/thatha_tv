@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Runs after every `git pull` (install.sh points git here): picks up new
+# requirements and restarts the service on the new code.
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+if git diff --name-only ORIG_HEAD HEAD | grep -qx requirements.txt; then
+    .venv/bin/pip install -q -r requirements.txt
+fi
+sudo systemctl restart thatha-tv
+echo "Restarted thatha-tv on the new code."

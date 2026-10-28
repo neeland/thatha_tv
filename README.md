@@ -47,8 +47,9 @@ With the Flirc plugged in, `install.sh`:
 2. pairs with the TV (turn it on and accept the prompt on screen),
 3. installs a `thatha-tv` service that starts on boot and restarts if it crashes.
 
-`.lgtv_client_key` is git-ignored. Re-run `install.sh`
-after a `git pull`. The TV IP and MAC are at the top of `live_tv.py`,
+`.lgtv_client_key` is git-ignored. After that, a
+`git pull` is all an update needs: it restarts the service on the new code
+(`hooks/post-merge`). The receiver can be plugged in or out at any time. The TV IP and MAC are at the top of `live_tv.py`,
 `remote.py` and `pair.py`.
 
 ## The buttons

@@ -5,6 +5,8 @@ set -euo pipefail
 cd "$(dirname "$0")"
 DIR="$(pwd)"
 
+git config core.hooksPath hooks                 # `git pull` restarts the service (hooks/post-merge)
+
 python3 -m venv .venv
 .venv/bin/pip install -q -r requirements.txt
 
