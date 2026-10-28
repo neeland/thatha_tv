@@ -45,13 +45,26 @@ With the Flirc plugged in, `install.sh`:
 
 1. creates the venv,
 2. pairs with the TV (turn it on and accept the prompt on screen),
-3. runs `learn.py`, which asks for each channel's button in turn:
-   press the labelled button for each one,
-4. installs a `thatha-tv` service that starts on boot and restarts if it crashes.
+3. installs a `thatha-tv` service that starts on boot and restarts if it crashes.
 
-`.lgtv_client_key` and `buttons.json` are git-ignored. Re-run `install.sh`
+`.lgtv_client_key` is git-ignored. Re-run `install.sh`
 after a `git pull`. The TV IP and MAC are at the top of `live_tv.py`,
 `remote.py` and `pair.py`.
+
+## The buttons
+
+The Flirc is programmed (Flirc app, *Controllers > Full Keyboard*) so that:
+
+| Remote button | Flirc key | Does |
+|---|---|---|
+| 1 2 3 4 5 6 7 8 9 0 | A B C D E F G H I J | channels, lowest first: 1 = 167, 2 = 201, 3 = 203, 4 = 204, 5 = 212, 6 = 213 |
+| up arrow | Volume Up | volume up (hold to keep going) |
+| down arrow | Volume Down | volume down |
+| on/off | Home | TV off if it's on, on if it's off |
+
+The remote is set (SETUP + a code) to a TV brand the LG ignores, so only the
+Pi acts on it. Number buttons with no channel yet show "That button is not set
+up". The service log lists which button goes to which channel when it starts.
 
 ## Using it
 
@@ -59,7 +72,8 @@ after a `git pull`. The TV IP and MAC are at the top of `live_tv.py`,
   "⏳ CHANGING TO CHANNEL 203 · PLEASE WAIT 9 SECONDS ⏳" messages. If DStv is
   already playing a channel the Pi tuned, it takes about 10 seconds; otherwise
   (TV was off, or DStv was used by hand) it restarts DStv first, about 40.
-- Buttons pressed while it's changing are ignored, and the TV says "Please wait".
+- Channel and on/off buttons pressed while it's changing are ignored, and the
+  TV says "Please wait". Volume works any time.
 - A button that isn't set up shows "That button is not set up".
 
 Every step waits for the TV screen to show what it expects (the TV takes a
@@ -68,14 +82,6 @@ channel grid has a highlighted tile, because keys sent while it's still
 opening can hang the DStv app. The channel number on the player banner is read
 back to confirm the change, and a wrong landing is corrected with a second
 hop. `.last_channel` holds the channel last seen playing.
-
-## Changing which button does what
-
-```sh
-sudo systemctl stop thatha-tv
-.venv/bin/python learn.py
-sudo systemctl start thatha-tv
-```
 
 ## Managing the service
 
@@ -98,6 +104,7 @@ Run `.venv/bin/python remote.py` over SSH to drive the TV from your keyboard
 (arrows/WASD, Enter, `b` back, `h` home, `q` quit). It prints every key
 pressed, so you can find a channel's position in Live TV > All channels and
 add it to `CHANNELS` in `live_tv.py` as `(downs, rights)` counted from 101.
-Then teach the Flirc a new button and re-run `learn.py`.
+Number buttons go to channels in order, so a new channel shifts the ones
+above it to the next button: relabel them.
 If its banner has a digit `screen.py` can't read yet, `live_tv.py` saves the
 frame to `unread_banner.png`; add the digit's shape to `DIGITS` in `screen.py`.
