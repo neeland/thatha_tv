@@ -112,7 +112,7 @@ async def connect(step, wake=True):
 def last_watched():
     return LAST_WATCHED.read_text().strip() if LAST_WATCHED.exists() else DEFAULT_CHANNEL
 
-CIRCLED = "⓿❶❷❸❹❺❻❼❽❾"
+CIRCLED = "⓪❶❷❸❹❺❻❼❽❾"   # the TV has no filled zero (⓿ and 🄌 show as boxes), so 0 is outlined
 
 def channel_label(number):
     """How a channel is named in the pop-ups: 📺 CHANNEL ❷❶❸. (Keycap digits like 2️⃣ draw their
