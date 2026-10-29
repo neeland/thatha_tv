@@ -6,6 +6,7 @@ captures as black (DRM), but the app's own menus and the player banner are drawn
 import asyncio
 import io
 import time
+from pathlib import Path
 import aiohttp
 import numpy as np
 from PIL import Image
@@ -32,6 +33,8 @@ TEMPLATES = [(digit, np.array([[c == "#" for c in row] for row in rows]),
 def cyan(a):
     r, g, b = a[..., 0], a[..., 1], a[..., 2]
     return (r < 110) & (g > 160) & (b > 160) & (abs(g - b) < 50)
+
+UNSETTLED_GRID = Path(__file__).parent / "unsettled_grid.png"  # last frame when the grid never settles
 
 SLOT_X, SLOT_Y = (193, 407, 621, 835), (162, 344)    # play-button centres of the visible tiles
 
@@ -121,16 +124,20 @@ class Screen:
         Scrolling pauses briefly between queued moves, so two alike frames aren't enough: the
         screen has to stay the same, with the same tile highlighted, for `still_for` seconds.
         """
-        end, last = time.monotonic() + timeout, await self.grab()
-        still_since, focus = None, None
+        start = time.monotonic()
+        end, last = start + timeout, await self.grab()
+        still_since, focus, seen = None, None, []
         while time.monotonic() < end:
             await asyncio.sleep(0.05)
             a = await self.grab()
             kind, now = classify(a)
-            if kind == "grid" and now == focus and np.abs(a - last).mean() < 0.3:
+            diff = np.abs(a - last).mean()
+            seen.append(f"{time.monotonic() - start:.1f}s {kind} {now} diff {diff:.2f}")
+            if kind == "grid" and now == focus and diff < 0.3:
                 if time.monotonic() - still_since >= still_for:
                     return focus
             else:
                 still_since, focus = time.monotonic(), (now if kind == "grid" else None)
             last = a
-        raise TimeoutError("grid did not settle")
+        Image.fromarray(last.astype(np.uint8)).save(UNSETTLED_GRID)
+        raise TimeoutError(f"grid did not settle (frame saved to {UNSETTLED_GRID.name}): " + "; ".join(seen))

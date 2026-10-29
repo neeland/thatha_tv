@@ -17,3 +17,4 @@ __pycache__/
 # Channel last seen playing, and banners with digits screen.py cannot read yet
 .last_channel
 unread_banner.png
+unsettled_grid.png
