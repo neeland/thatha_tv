@@ -1,6 +1,7 @@
 """Times each stage of a TV screenshot, to find what's slow on the Pi: .venv/bin/python grab_timing.py"""
 import asyncio
 import io
+import ssl
 import subprocess
 import time
 import urllib.request
@@ -29,7 +30,7 @@ async def main():
             print(f"ask TV {t1 - t0:.2f}s | download {t2 - t1:.2f}s ({len(data) // 1024} KB) | "
                   f"decode {t3 - t2:.2f}s | read screen {t4 - t3:.2f}s | {kind}")
             t5 = time.monotonic()
-            with urllib.request.urlopen(res["imageUri"], timeout=20) as r:   # same file, plain Python
+            with urllib.request.urlopen(res["imageUri"], timeout=20, context=ssl._create_unverified_context()) as r:   # same file, plain Python (TV's own certificate)
                 r.read()
             print(f"    same download without aiohttp: {time.monotonic() - t5:.2f}s")
     await tv.disconnect()
