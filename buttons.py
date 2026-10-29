@@ -3,7 +3,7 @@
 The remote's IR is picked up by a Flirc USB receiver plugged into the Pi, which
 turns each button into a key press. The Flirc is programmed (Full Keyboard) so
 the number buttons 1-9 and 0 type a-j, the up and down arrows are Volume Up and
-Volume Down, and on/off is Home. Number buttons go to the channels in
+Volume Down (or the Up and Down arrow keys), and on/off is Home. Number buttons go to the channels in
 CHANNELS from lowest to highest: 1 is the lowest. While the TV is changing
 channel, channel and power buttons are ignored and the TV says "please wait";
 volume still works.
@@ -18,8 +18,9 @@ import live_tv
 
 NUMBER_KEYS = [ecodes.ecodes[f"KEY_{c}"] for c in "ABCDEFGHIJ"]   # remote buttons 1-9, 0
 CHANNEL_KEYS = dict(zip(NUMBER_KEYS, sorted(live_tv.CHANNELS, key=int)))
-VOLUME_KEYS = {ecodes.KEY_VOLUMEUP: "volume_up", ecodes.KEY_VOLUMEDOWN: "volume_down"}
-POWER_KEYS = {ecodes.KEY_HOME, ecodes.KEY_HOMEPAGE}   # Flirc's keyboard Home and media Home
+VOLUME_KEYS = {ecodes.KEY_VOLUMEUP: "volume_up", ecodes.KEY_UP: "volume_up",     # the remote's up and down
+               ecodes.KEY_VOLUMEDOWN: "volume_down", ecodes.KEY_DOWN: "volume_down"}  # arrows, as either key
+POWER_KEYS = {ecodes.KEY_HOME, ecodes.KEY_HOMEPAGE, ecodes.KEY_POWER}   # on/off: keyboard Home, media Home or Power
 CHANGE_TIMEOUT = 120              # seconds before giving up on a stuck channel change
 WAIT_MESSAGE_EVERY = 5            # seconds between "please wait" pop-ups, so they don't pile up
 
@@ -64,6 +65,8 @@ class Remote:
             self.spawn(say(text))
 
     def press(self, code, held=False):
+        if not held:
+            log.info("Pressed %s", key_name(code))
         if code in VOLUME_KEYS:
             if not self.adjusting:                            # drop repeats while one is still being sent
                 self.adjusting = True

@@ -59,8 +59,8 @@ The Flirc is programmed (Flirc app, *Controllers > Full Keyboard*) so that:
 | Remote button | Flirc key | Does |
 |---|---|---|
 | 1 2 3 4 5 6 7 8 9 0 | A B C D E F G H I J | channels, lowest first: 1 = 167, 2 = 201, 3 = 203, 4 = 204, 5 = 212, 6 = 213 |
-| up arrow | Volume Up | volume up (hold to keep going) |
-| down arrow | Volume Down | volume down |
+| up arrow | Volume Up or Up | volume up (hold to keep going) |
+| down arrow | Volume Down or Down | volume down |
 | on/off | Home | TV off if it's on, on if it's off |
 
 The remote is set (SETUP + a code) to a TV brand the LG ignores, so only the
