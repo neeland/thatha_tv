@@ -63,9 +63,10 @@ async def connect(step):
         try:
             await tv.connect()
             return tv, True
-        except Exception:
+        except Exception as err:
+            last = err
             await asyncio.sleep(2)
-    raise RuntimeError("Could not reach the TV after waking it")
+    raise RuntimeError(f"Could not reach the TV at {TV_IP} after waking it: {last!r}")
 
 def grid_moves(src, dst):
     """Arrow presses that walk the All-channels highlight from one channel to another."""
