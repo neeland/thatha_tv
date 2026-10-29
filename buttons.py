@@ -126,7 +126,9 @@ class Remote:
             self.adjusting = False
 
     async def power(self):
-        """On/off: turn the TV off if it's on, otherwise wake it."""
+        """On/off: turn the TV off if it's on, otherwise wake it. Either way DStv may not be where
+        we left it afterwards, so the next channel change starts fresh."""
+        live_tv.STATE_FILE.unlink(missing_ok=True)
         tv = WebOsClient(live_tv.TV_IP, live_tv.CLIENT_KEY, connect_timeout=3)
         try:
             await tv.connect()
