@@ -92,8 +92,9 @@ async def walk(scr, keys, channel):
 class Countdown:
     """'Please wait' toasts while the channel changes. The TV shows one toast at a time for about
     3 seconds and queues the rest, so a new one goes in every 3 seconds, and only while it will
-    still be true when it appears. Toasts are LG's grey box (no icons on this TV), so capitals
-    and the colour hourglass emoji are what make it stand out; short enough to stay one line."""
+    still be true when it appears. Toasts are LG's grey box (no colours or icons on this TV, and
+    anything full-screen would take DStv out of the foreground), so capitals and colour emoji
+    are what make it stand out; short enough to stay one line."""
     SHOWN_FOR = 3
 
     def __init__(self, tv, channel, seconds):
@@ -102,8 +103,8 @@ class Countdown:
     async def run(self, tv, channel, seconds):
         remaining, first = seconds, True
         while remaining > self.SHOWN_FOR:
-            text = (f"⏳  CHANGING TO CHANNEL {channel} · PLEASE WAIT {round(remaining)} SECONDS  ⏳" if first
-                    else f"⏳  CHANNEL {channel} IN {round(remaining)} SECONDS  ⏳")
+            text = (f"🔵🔵  DO NOT TOUCH ANYTHING  🔵🔵  CHANGING TO CHANNEL {channel} · {round(remaining)} SECONDS" if first
+                    else f"🔵🔵  DO NOT TOUCH ANYTHING  🔵🔵  CHANNEL {channel} IN {round(remaining)} SECONDS")
             try:
                 await tv.request("system.notifications/createToast", {"message": text})
             except Exception:

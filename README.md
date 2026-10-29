@@ -70,11 +70,11 @@ up". The service log lists which button goes to which channel when it starts.
 ## Using it
 
 - Press a channel's button. The TV turns on if needed and counts down with
-  "⏳ CHANGING TO CHANNEL 203 · PLEASE WAIT 9 SECONDS ⏳" messages. If DStv is
+  "🔵🔵 DO NOT TOUCH ANYTHING 🔵🔵 CHANNEL 203 IN 9 SECONDS" messages. If DStv is
   already playing a channel the Pi tuned, it takes about 10 seconds; otherwise
   (TV was off, or DStv was used by hand) it restarts DStv first, about 40.
 - Channel and on/off buttons pressed while it's changing are ignored, and the
-  TV says "Please wait". Volume works any time.
+  TV says "DO NOT TOUCH ANYTHING". Volume works any time.
 - A button that isn't set up shows "That button is not set up".
 
 Every step waits for the TV screen to show what it expects (the TV takes a

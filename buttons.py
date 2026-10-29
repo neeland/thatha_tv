@@ -71,8 +71,8 @@ class Remote:
         elif held:
             pass                                              # only volume repeats while a button is held
         elif self.busy:
-            self.message("Please wait, the TV is turning on or off" if self.busy == "power"
-                         else f"Please wait, still changing to {self.busy}")
+            self.message("🔵🔵  DO NOT TOUCH ANYTHING  🔵🔵  THE TV IS TURNING ON OR OFF" if self.busy == "power"
+                         else f"🔵🔵  DO NOT TOUCH ANYTHING  🔵🔵  STILL CHANGING TO {self.busy}")
         elif code in POWER_KEYS:
             self.busy = "power"
             self.spawn(self.power())
