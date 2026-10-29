@@ -56,7 +56,7 @@ async def connect(step):
         return tv, False
     except Exception:
         pass
-    step("TV is off, waking it")
+    step("TV not answering (off, or not on this network), sending wake-up")
     power_on()
     for _ in range(15):
         tv = WebOsClient(TV_IP, CLIENT_KEY, connect_timeout=3)
