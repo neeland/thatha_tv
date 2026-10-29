@@ -31,10 +31,11 @@ def key_name(code):
     return name if isinstance(name, str) else name[-1]  # some codes have several names
 
 def is_remote(device):
-    """The Flirc shows up as a keyboard (letters, Home) plus a media-keys device (volume); this
-    skips mice and things like the Pi 5's power button."""
+    """The Flirc shows up as several devices (keyboard, media keys, system keys such as power),
+    so take every one of them, plus any other keyboard; this skips mice and things like the
+    Pi 5's power button."""
     keys = device.capabilities().get(ecodes.EV_KEY, [])
-    return ecodes.KEY_A in keys or ecodes.KEY_VOLUMEUP in keys
+    return "flirc" in device.name.lower() or ecodes.KEY_A in keys or ecodes.KEY_VOLUMEUP in keys
 
 async def say(message):
     """Pop-up on the TV from a short-lived connection (does nothing if the TV is off)."""
