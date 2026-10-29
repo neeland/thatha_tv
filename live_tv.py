@@ -112,12 +112,10 @@ async def connect(step, wake=True):
 def last_watched():
     return LAST_WATCHED.read_text().strip() if LAST_WATCHED.exists() else DEFAULT_CHANNEL
 
-CIRCLED = "⓪❶❷❸❹❺❻❼❽❾"   # the TV has no filled zero (⓿ and 🄌 show as boxes), so 0 is outlined
-
 def channel_label(number):
-    """How a channel is named in the pop-ups: 📺 CHANNEL ❷❶❸. (Keycap digits like 2️⃣ draw their
-    box beside the digit on this TV; these circled ones are single characters and draw whole.)"""
-    return "📺 CHANNEL " + "".join(CIRCLED[int(d)] for d in number)
+    """How a channel is named in the pop-ups: 📺 CHANNEL 201. The TV's pop-up font has no bold, and
+    fancy digits (keycaps, circled, bold) draw badly or as boxes, so the number stays plain."""
+    return f"📺 CHANNEL {number}"
 
 def grid_moves(src, dst):
     """Arrow presses that walk the All-channels highlight from one tile to another."""
@@ -143,7 +141,7 @@ DO_NOT_TOUCH = "⏳ DO NOT TOUCH ANYTHING ⏳"
 
 def text_width(text):
     """Rough width in screenshot pixels of capitals in the toast's font, measured on this TV."""
-    return sum(4.1 if c in " ·" else 13 if c in CIRCLED else 18 if ord(c) > 0x2000 else 4.5 if c == "I" else 12 if c in "MW"
+    return sum(4.1 if c in " ·" else 18 if ord(c) > 0x2000 else 4.5 if c == "I" else 12 if c in "MW"
                else 8.4 if c.isdigit() else 9.2 for c in text)
 
 def two_lines(first, second):
