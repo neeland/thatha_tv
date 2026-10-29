@@ -17,7 +17,6 @@ import logging
 import time
 import evdev
 from evdev import ecodes
-from aiowebostv import WebOsClient
 import live_tv
 
 NUMBER_KEYS = [ecodes.ecodes[f"KEY_{c}"] for c in "ABCDEFGHIJ"]   # remote buttons 1-9, 0
@@ -45,12 +44,10 @@ def is_remote(device):
     return "flirc" in device.name.lower() or ecodes.KEY_A in keys or ecodes.KEY_VOLUMEUP in keys
 
 async def say(message):
-    """Pop-up on the TV from a short-lived connection (does nothing if the TV is off)."""
-    tv = WebOsClient(live_tv.TV_IP, live_tv.CLIENT_KEY, connect_timeout=5)
+    """Pop-up on the TV (does nothing if the TV is off)."""
     try:
-        await tv.connect()
+        tv, _ = await live_tv.connect(log.info, wake=False)
         await live_tv.toast(tv, message)
-        await tv.disconnect()
     except Exception:
         pass
 
@@ -93,7 +90,7 @@ class Remote:
             self.spawn(self.power())
         elif code in CHANNEL_KEYS:
             channel = CHANNEL_KEYS[code]
-            self.busy = f"CHANNEL {channel}"
+            self.busy = live_tv.channel_label(channel)
             self.spawn(self.change(self.busy, channel=channel))
         elif code in STEP_KEYS:
             delta = STEP_KEYS[code]
@@ -104,58 +101,57 @@ class Remote:
             self.message("That button is not set up")
 
     async def volume(self, step):
-        tv = WebOsClient(live_tv.TV_IP, live_tv.CLIENT_KEY, connect_timeout=5)
         try:
-            await tv.connect()
+            tv, _ = await live_tv.connect(log.info, wake=False)
             await getattr(tv, step)()
-            await tv.disconnect()
         except Exception:
             pass                                              # TV off: nothing to turn up
         finally:
             self.adjusting = False
 
     async def mute(self):
-        tv = WebOsClient(live_tv.TV_IP, live_tv.CLIENT_KEY, connect_timeout=5)
         try:
-            await tv.connect()
+            tv, _ = await live_tv.connect(log.info, wake=False)
             await tv.set_mute(not await tv.get_muted())
-            await tv.disconnect()
         except Exception:
             log.exception("Mute failed")
         finally:
             self.adjusting = False
 
     async def power(self):
-        """On/off: turn the TV off if it's on, otherwise wake it. Either way DStv may not be where
-        we left it afterwards, so the next channel change starts fresh."""
-        live_tv.STATE_FILE.unlink(missing_ok=True)
-        tv = WebOsClient(live_tv.TV_IP, live_tv.CLIENT_KEY, connect_timeout=3)
+        """On/off: turn the TV off if it's on; if it's off, turn it on straight to the last channel
+        watched (the slow DStv start happens now, under the waking-up message, not on the next
+        channel press). Either way the channel we knew to be playing no longer counts."""
         try:
-            await tv.connect()
-        except Exception:
-            log.info("Turning the TV on")
-            await asyncio.to_thread(live_tv.power_on)
-            await asyncio.sleep(10)                           # let it come up before taking more presses
-        else:
+            live_tv.STATE_FILE.unlink(missing_ok=True)
+            try:
+                tv, _ = await live_tv.connect(log.info, wake=False)
+            except Exception:
+                channel = live_tv.last_watched()
+                log.info("Turning the TV on, to %s", channel)
+                self.busy = live_tv.channel_label(channel)
+                await self.change(self.busy, channel=channel)  # wakes the TV, then starts DStv on it
+                return
             log.info("Turning the TV off")
             try:
                 await tv.power_off()
             except Exception:
                 log.exception("Turning the TV off failed")
-            await tv.disconnect()
+            await live_tv.drop()
             await asyncio.sleep(5)                            # a press now would just wake it again
         finally:
-            self.busy = None
+            if self.busy == "power":
+                self.busy = None
 
     async def change(self, what, **target):
-        log.info("Changing to %s", what.lower())
+        log.info("Changing to %s", target)
         try:
             async with asyncio.timeout(CHANGE_TIMEOUT):
                 await live_tv.main(**target)
-            log.info("Done: %s", what.lower())
+            log.info("Done: %s", target)
         except Exception:
-            log.exception("Changing to %s failed", what.lower())
-            await say(f"Could not change to {what.lower()}, please try again")
+            log.exception("Changing to %s failed", target)
+            await say(live_tv.two_lines("⏳ SORRY, THAT DIDN'T WORK ⏳", "PLEASE PRESS THE BUTTON AGAIN"))
         finally:
             self.busy = None
 

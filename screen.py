@@ -122,7 +122,7 @@ class Screen:
                 raise TimeoutError(f"screen stayed {got!r}, expected {kind!r}")
             await asyncio.sleep(0.05)
 
-    async def settled_grid(self, timeout=6, still_for=0.5):
+    async def settled_grid(self, timeout=6, still_for=0.3):
         """Wait for the grid to stop scrolling and return the focus.
 
         Scrolling pauses briefly between queued moves, so two alike frames aren't enough: the

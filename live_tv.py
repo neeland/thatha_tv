@@ -16,6 +16,7 @@ STATE_FILE = Path(__file__).parent / ".last_tile"      # grid tile last seen pla
 UNREAD_BANNER = Path(__file__).parent / "unread_banner.png"  # saved when the banner has digits we can't read yet
 LINEUP_FILE = Path(__file__).parent / "lineup.json"    # every channel's tile, built by lineup.py
 SEEN_FILE = Path(__file__).parent / "seen_tiles.json"  # channel read off the banner at each tile, learned as we go
+LAST_WATCHED = Path(__file__).parent / ".last_watched" # channel last played, for turning the TV back on to it
 DEFAULT_CHANNEL = "203"
 SHORTCUTS = ["167", "201", "203", "204", "212", "213"]  # number buttons 1-6, lowest first
 
@@ -65,51 +66,64 @@ async def press(tv, keys, delay=1):
     for key in keys:
         await tv.button(key); await asyncio.sleep(delay)
 
-async def connect(step):
-    """Connect right away if the TV is on; only wake it (and wait) if it isn't."""
+_tv = None   # the open connection to the TV, kept between changes by the buttons service
+
+async def drop():
+    """Close the kept connection: the TV went off, or it may no longer be in a state we know."""
+    global _tv
+    tv, _tv = _tv, None
+    if tv is not None:
+        try:
+            await tv.disconnect()
+        except Exception:
+            pass
+
+async def connect(step, wake=True):
+    """The kept connection if the TV still answers on it (saves ~1s a change), else a new one,
+    waking the TV and waiting for it only if `wake`. Returns (tv, was_off)."""
+    global _tv
+    if _tv is not None:
+        try:
+            await asyncio.wait_for(_tv.get_power_state(), 2)
+            return _tv, False
+        except Exception:
+            await drop()
     tv = WebOsClient(TV_IP, CLIENT_KEY, connect_timeout=3)
     try:
         await tv.connect()
+        _tv = tv
         return tv, False
     except Exception:
-        pass
+        if not wake:
+            raise
     step("TV not answering (off, or not on this network), sending wake-up")
     power_on()
     for _ in range(15):
         tv = WebOsClient(TV_IP, CLIENT_KEY, connect_timeout=3)
         try:
             await tv.connect()
+            _tv = tv
             return tv, True
         except Exception as err:
             last = err
             await asyncio.sleep(2)
     raise RuntimeError(f"Could not reach the TV at {TV_IP} after waking it: {last!r}")
 
-def grid_moves(src, dst):
-    """Arrow presses that walk the All-channels highlight from one tile to another."""
-    downs, rights = dst // 4 - src // 4, dst % 4 - src % 4
-    return (["DOWN" if downs > 0 else "UP"] * abs(downs) +
-            ["RIGHT" if rights > 0 else "LEFT"] * abs(rights))
+def last_watched():
+    return LAST_WATCHED.read_text().strip() if LAST_WATCHED.exists() else DEFAULT_CHANNEL
 
-async def walk(scr, keys, tile):
-    """Move the grid highlight and play the tile.
+CIRCLED = "⓿❶❷❸❹❺❻❼❽❾"
 
-    Only called once the grid is up and highlighting a tile: keys sent while it is still
-    opening hang the app. From there a steady pace is fine. The grid keeps the highlighted row
-    at the top, so only the column can be checked here; the banner confirms the rest.
-    """
-    for key in keys:                                      # 0.3s dropped one of 15 DOWNs once
-        await scr.tv.button(key); await asyncio.sleep(0.4)
-    focus = await scr.settled_grid()
-    if focus[1] != tile % 4:
-        raise RuntimeError(f"Grid highlight ended on {focus}, expected column {tile % 4} for tile {tile}")
-    await scr.tv.button("ENTER")
+def channel_label(number):
+    """How a channel is named in the pop-ups: 📺 CHANNEL ❷❶❸. (Keycap digits like 2️⃣ draw their
+    box beside the digit on this TV; these circled ones are single characters and draw whole.)"""
+    return "📺 CHANNEL " + "".join(CIRCLED[int(d)] for d in number)
 
 DO_NOT_TOUCH = "⏳ DO NOT TOUCH ANYTHING ⏳"
 
 def text_width(text):
     """Rough width in screenshot pixels of capitals in the toast's font, measured on this TV."""
-    return sum(4.1 if c in " ·" else 18 if c == "⏳" else 4.5 if c == "I" else 12 if c in "MW"
+    return sum(4.1 if c in " ·" else 13 if c in CIRCLED else 18 if ord(c) > 0x2000 else 4.5 if c == "I" else 12 if c in "MW"
                else 8.4 if c.isdigit() else 9.2 for c in text)
 
 def two_lines(first, second):
@@ -250,18 +264,17 @@ async def main(channel=None, delta=0):
         tile = TILES[channel]
         if warm and playing == tile:
             step(f"already on {channel}")
-            await tv.disconnect()
             return
-        what = f"CHANNEL {channel}"
+        what = channel_label(channel)
         moves = len(grid_moves(playing, tile)) if warm else tile // 4 + tile % 4
     else:
         tile = playing + delta
-        what = f"CHANNEL {number_at(tile)}" if number_at(tile) else ("THE NEXT CHANNEL" if delta > 0 else "THE PREVIOUS CHANNEL")
+        what = channel_label(number_at(tile)) if number_at(tile) else ("THE NEXT CHANNEL" if delta > 0 else "THE PREVIOUS CHANNEL")
         moves = 1 if tile // 4 == playing // 4 else 4
     scr = Screen(tv)
-    # Measured: the grid opens in ~3s, moves take 0.4s each, the stream starts ~5s after ENTER
-    countdown = Countdown(tv, what, (3 if warm else 30) + 0.4 * moves + 5,
-                          None if warm else "WAKING UP · NEXT TIME IS QUICKER")
+    # Measured: the grid opens in ~3s, moves take 0.4s each, the stream starts ~6.5s after ENTER
+    countdown = Countdown(tv, what, (4 if warm else 30) + 0.4 * moves + 7,
+                          None if warm else "🌅 WAKING UP · NEXT TIME IS QUICKER")
     try:
         if not channel:
             tile = await step_tile(scr, playing, delta, step)
@@ -285,14 +298,23 @@ async def main(channel=None, delta=0):
         if seen:
             remember(seen, tile)
         STATE_FILE.write_text(f"{tile}\n")
+        if seen or channel or number_at(tile):
+            LAST_WATCHED.write_text(f"{seen or channel or number_at(tile)}\n")
         step(f"playing tile {tile}: " + (seen or f"{channel or '?'} (banner unread, trusting the grid)"))
     except BaseException:
         STATE_FILE.unlink(missing_ok=True)                # state unknown, next run starts fresh
+        await drop()
         raise
     finally:
         countdown.stop()
         await scr.close()
-        await tv.disconnect()
+
+async def once(**target):
+    """main() from the command line: don't leave the connection open at exit."""
+    try:
+        await main(**target)
+    finally:
+        await drop()
 
 if __name__ == "__main__":
     arg = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_CHANNEL
@@ -301,6 +323,6 @@ if __name__ == "__main__":
     if arg not in TILES and arg not in ("up", "down"):
         sys.exit(f"Unknown channel {arg!r}: use a DStv channel number (see lineup.json), up, down or on")
     try:
-        asyncio.run(main(delta=1) if arg == "up" else main(delta=-1) if arg == "down" else main(arg))
+        asyncio.run(once(delta=1) if arg == "up" else once(delta=-1) if arg == "down" else once(channel=arg))
     except RuntimeError as err:
         sys.exit(str(err))

@@ -17,6 +17,7 @@ __pycache__/
 # Tile last seen playing, channels learned off the banner, and banners screen.py cannot read yet
 .last_channel
 .last_tile
+.last_watched
 seen_tiles.json
 unread_banner.png
 unsettled_grid.png
