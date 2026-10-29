@@ -119,6 +119,26 @@ def channel_label(number):
     box beside the digit on this TV; these circled ones are single characters and draw whole.)"""
     return "📺 CHANNEL " + "".join(CIRCLED[int(d)] for d in number)
 
+def grid_moves(src, dst):
+    """Arrow presses that walk the All-channels highlight from one tile to another."""
+    downs, rights = dst // 4 - src // 4, dst % 4 - src % 4
+    return (["DOWN" if downs > 0 else "UP"] * abs(downs) +
+            ["RIGHT" if rights > 0 else "LEFT"] * abs(rights))
+
+async def walk(scr, keys, tile):
+    """Move the grid highlight and play the tile.
+
+    Only called once the grid is up and highlighting a tile: keys sent while it is still
+    opening hang the app. From there a steady pace is fine. The grid keeps the highlighted row
+    at the top, so only the column can be checked here; the banner confirms the rest.
+    """
+    for key in keys:                                      # 0.3s dropped one of 15 DOWNs once
+        await scr.tv.button(key); await asyncio.sleep(0.4)
+    focus = await scr.settled_grid()
+    if focus[1] != tile % 4:
+        raise RuntimeError(f"Grid highlight ended on {focus}, expected column {tile % 4} for tile {tile}")
+    await scr.tv.button("ENTER")
+
 DO_NOT_TOUCH = "⏳ DO NOT TOUCH ANYTHING ⏳"
 
 def text_width(text):
