@@ -70,7 +70,8 @@ up". The service log lists which button goes to which channel when it starts.
 ## Using it
 
 - Press a channel's button. The TV turns on if needed and counts down with
-  "🔵🔵 DO NOT TOUCH ANYTHING 🔵🔵 CHANNEL 203 IN 9 SECONDS" messages. If DStv is
+  "⏳ DO NOT TOUCH ANYTHING ⏳" messages, with "CHANNEL 203 IN 9 SECONDS"
+  centred on a second line. If DStv is
   already playing a channel the Pi tuned, it takes about 10 seconds; otherwise
   (TV was off, or DStv was used by hand) it restarts DStv first, about 40.
 - Channel and on/off buttons pressed while it's changing are ignored, and the

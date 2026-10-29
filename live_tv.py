@@ -89,12 +89,31 @@ async def walk(scr, keys, channel):
         raise RuntimeError(f"Grid highlight ended on {focus}, expected column {CHANNELS[channel][1]} for {channel}")
     await scr.tv.button("ENTER")
 
+DO_NOT_TOUCH = "⏳ DO NOT TOUCH ANYTHING ⏳"
+
+def text_width(text):
+    """Rough width in screenshot pixels of capitals in the toast's font, measured on this TV."""
+    return sum(4.1 if c in " ·" else 18 if c == "⏳" else 4.5 if c == "I" else 12 if c in "MW"
+               else 8.4 if c.isdigit() else 9.2 for c in text)
+
+def two_lines(first, second):
+    """Toast text as two centred lines. Toasts are a fixed-width box with left-aligned text that
+    ignores line breaks (and HTML), and the font has no bold. So each line is joined with
+    non-breaking spaces, too long to share a line with the other so the box wraps between them,
+    and pushed right with non-breaking spaces (4.1px each) to centre it in the box's 394px."""
+    nb = "\u00a0"
+    lines = []
+    for line in (first, second):
+        pad = max(0, round((197 - text_width(line) / 2) / 4.1))
+        lines.append(nb * pad + nb.join(line.split()))
+    return " ".join(lines)
+
 class Countdown:
     """'Please wait' toasts while the channel changes. The TV shows one toast at a time for about
     3 seconds and queues the rest, so a new one goes in every 3 seconds, and only while it will
-    still be true when it appears. Toasts are LG's grey box (no colours or icons on this TV, and
-    anything full-screen would take DStv out of the foreground), so capitals and colour emoji
-    are what make it stand out; short enough to stay one line."""
+    still be true when it appears. Toasts are LG's grey box (no colours, icons or bold on this TV,
+    and anything full-screen would take DStv out of the foreground), so capitals, the colour
+    hourglass and centring are what make it stand out."""
     SHOWN_FOR = 3
 
     def __init__(self, tv, channel, seconds):
@@ -103,8 +122,8 @@ class Countdown:
     async def run(self, tv, channel, seconds):
         remaining, first = seconds, True
         while remaining > self.SHOWN_FOR:
-            text = (f"🔵🔵  DO NOT TOUCH ANYTHING  🔵🔵  CHANGING TO CHANNEL {channel} · {round(remaining)} SECONDS" if first
-                    else f"🔵🔵  DO NOT TOUCH ANYTHING  🔵🔵  CHANNEL {channel} IN {round(remaining)} SECONDS")
+            text = two_lines(DO_NOT_TOUCH, f"CHANGING TO CHANNEL {channel} · {round(remaining)} SECONDS" if first
+                             else f"CHANNEL {channel} IN {round(remaining)} SECONDS")
             try:
                 await tv.request("system.notifications/createToast", {"message": text})
             except Exception:
