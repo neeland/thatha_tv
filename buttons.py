@@ -1,12 +1,16 @@
-"""Changes channel, volume and power from the One For All remote.
+"""Changes channel, volume, mute and power from the One For All remote.
 
 The remote's IR is picked up by a Flirc USB receiver plugged into the Pi, which
-turns each button into a key press. The Flirc is programmed (Full Keyboard) so
-the number buttons 1-9 and 0 type a-j, the up and down arrows are Volume Up and
-Volume Down (or the Up and Down arrow keys), and on/off is Home. Number buttons go to the channels in
-CHANNELS from lowest to highest: 1 is the lowest. While the TV is changing
-channel, channel and power buttons are ignored and the TV says "please wait";
-volume still works.
+turns each button into a key press. The Flirc is programmed (Full Keyboard) so:
+
+    1-9, 0          a-j            number buttons: live_tv.SHORTCUTS, lowest first
+    CH+ / CH-       = / -          next / previous channel in DStv's list, any channel
+    up / down       Up / Down      volume (Volume Up / Volume Down work too)
+    on/off          P              TV off if on, on if off (Home or Power work too)
+    mute            M              mute on/off (Mute works too)
+
+While the TV is changing channel, channel and power buttons are ignored and the
+TV says "do not touch anything"; volume and mute still work.
 """
 import asyncio
 import logging
@@ -17,10 +21,13 @@ from aiowebostv import WebOsClient
 import live_tv
 
 NUMBER_KEYS = [ecodes.ecodes[f"KEY_{c}"] for c in "ABCDEFGHIJ"]   # remote buttons 1-9, 0
-CHANNEL_KEYS = dict(zip(NUMBER_KEYS, sorted(live_tv.CHANNELS, key=int)))
+CHANNEL_KEYS = dict(zip(NUMBER_KEYS, live_tv.SHORTCUTS))
+STEP_KEYS = {k: +1 for k in (ecodes.KEY_EQUAL, ecodes.KEY_KPPLUS, ecodes.KEY_PAGEUP, ecodes.KEY_CHANNELUP)}
+STEP_KEYS.update({k: -1 for k in (ecodes.KEY_MINUS, ecodes.KEY_KPMINUS, ecodes.KEY_PAGEDOWN, ecodes.KEY_CHANNELDOWN)})
+MUTE_KEYS = {ecodes.KEY_M, ecodes.KEY_MUTE}
 VOLUME_KEYS = {ecodes.KEY_VOLUMEUP: "volume_up", ecodes.KEY_UP: "volume_up",     # the remote's up and down
                ecodes.KEY_VOLUMEDOWN: "volume_down", ecodes.KEY_DOWN: "volume_down"}  # arrows, as either key
-POWER_KEYS = {ecodes.KEY_HOME, ecodes.KEY_HOMEPAGE, ecodes.KEY_POWER}   # on/off: keyboard Home, media Home or Power
+POWER_KEYS = {ecodes.KEY_P, ecodes.KEY_HOME, ecodes.KEY_HOMEPAGE, ecodes.KEY_POWER, ecodes.KEY_SLEEP}
 CHANGE_TIMEOUT = 120              # seconds before giving up on a stuck channel change
 WAIT_MESSAGE_EVERY = 5            # seconds between "please wait" pop-ups, so they don't pile up
 
@@ -49,7 +56,7 @@ async def say(message):
 
 class Remote:
     def __init__(self):
-        self.busy = None          # channel being changed to, or "power"
+        self.busy = None          # what's being changed to ("CHANNEL 203", "THE NEXT CHANNEL"), or "power"
         self.adjusting = False    # a volume step is on its way to the TV
         self.last_message = 0
         self.tasks = set()        # keeps pop-ups and changes alive until they finish
@@ -68,7 +75,11 @@ class Remote:
     def press(self, code, held=False):
         if not held:
             log.info("Pressed %s", key_name(code))
-        if code in VOLUME_KEYS:
+        if code in MUTE_KEYS:
+            if not held and not self.adjusting:
+                self.adjusting = True
+                self.spawn(self.mute())
+        elif code in VOLUME_KEYS:
             if not self.adjusting:                            # drop repeats while one is still being sent
                 self.adjusting = True
                 self.spawn(self.volume(VOLUME_KEYS[code]))
@@ -76,13 +87,18 @@ class Remote:
             pass                                              # only volume repeats while a button is held
         elif self.busy:
             self.message(live_tv.two_lines(live_tv.DO_NOT_TOUCH, "THE TV IS TURNING ON OR OFF" if self.busy == "power"
-                                           else f"STILL CHANGING TO CHANNEL {self.busy}"))
+                                           else f"STILL CHANGING TO {self.busy}"))
         elif code in POWER_KEYS:
             self.busy = "power"
             self.spawn(self.power())
         elif code in CHANNEL_KEYS:
-            self.busy = CHANNEL_KEYS[code]
-            self.spawn(self.change(self.busy))
+            channel = CHANNEL_KEYS[code]
+            self.busy = f"CHANNEL {channel}"
+            self.spawn(self.change(self.busy, channel=channel))
+        elif code in STEP_KEYS:
+            delta = STEP_KEYS[code]
+            self.busy = "THE NEXT CHANNEL" if delta > 0 else "THE PREVIOUS CHANNEL"
+            self.spawn(self.change(self.busy, delta=delta))
         else:
             log.info("Button %s is not set up", key_name(code))
             self.message("That button is not set up")
@@ -95,6 +111,17 @@ class Remote:
             await tv.disconnect()
         except Exception:
             pass                                              # TV off: nothing to turn up
+        finally:
+            self.adjusting = False
+
+    async def mute(self):
+        tv = WebOsClient(live_tv.TV_IP, live_tv.CLIENT_KEY, connect_timeout=5)
+        try:
+            await tv.connect()
+            await tv.set_mute(not await tv.get_muted())
+            await tv.disconnect()
+        except Exception:
+            log.exception("Mute failed")
         finally:
             self.adjusting = False
 
@@ -118,15 +145,15 @@ class Remote:
         finally:
             self.busy = None
 
-    async def change(self, channel):
-        log.info("Changing to %s", channel)
+    async def change(self, what, **target):
+        log.info("Changing to %s", what.lower())
         try:
             async with asyncio.timeout(CHANGE_TIMEOUT):
-                await live_tv.main(channel)
-            log.info("Now on %s", channel)
+                await live_tv.main(**target)
+            log.info("Done: %s", what.lower())
         except Exception:
-            log.exception("Changing to %s failed", channel)
-            await say(f"Could not change to {channel}, please try again")
+            log.exception("Changing to %s failed", what.lower())
+            await say(f"Could not change to {what.lower()}, please try again")
         finally:
             self.busy = None
 
@@ -166,4 +193,5 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
     for key, channel in CHANNEL_KEYS.items():
         log.info("Button %s (%s): channel %s", "1234567890"[NUMBER_KEYS.index(key)], key_name(key), channel)
+    log.info("CH+ = and CH- -, volume Up/Down, on/off P (or Home), mute M")
     asyncio.run(main())

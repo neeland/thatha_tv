@@ -58,10 +58,11 @@ The Flirc is programmed (Flirc app, *Controllers > Full Keyboard*) so that:
 
 | Remote button | Flirc key | Does |
 |---|---|---|
-| 1 2 3 4 5 6 7 8 9 0 | A B C D E F G H I J | channels, lowest first: 1 = 167, 2 = 201, 3 = 203, 4 = 204, 5 = 212, 6 = 213 |
-| up arrow | Volume Up or Up | volume up (hold to keep going) |
-| down arrow | Volume Down or Down | volume down |
-| on/off | Home | TV off if it's on, on if it's off |
+| 1 2 3 4 5 6 7 8 9 0 | A B C D E F G H I J | shortcuts, lowest first: 1 = 167, 2 = 201, 3 = 203, 4 = 204, 5 = 212, 6 = 213 |
+| CH+ / CH- | = / - | next / previous channel in DStv's list: every channel, not just the shortcuts |
+| up / down arrows | Up / Down (or Volume Up / Down) | volume (hold to keep going) |
+| on/off | P (or Home / Power) | TV off if it's on, on if it's off |
+| mute | M (or Mute) | mute on / off |
 
 The remote is set (SETUP + a code) to a TV brand the LG ignores, so only the
 Pi acts on it. Number buttons with no channel yet show "That button is not set
@@ -100,13 +101,22 @@ journalctl -u thatha-tv -f           # live log: receiver found, each button and
 .venv/bin/python live_tv.py on     # just turn the TV on
 ```
 
-## Adding a channel
+## Channel list
 
-Run `.venv/bin/python remote.py` over SSH to drive the TV from your keyboard
-(arrows/WASD, Enter, `b` back, `h` home, `q` quit). It prints every key
-pressed, so you can find a channel's position in Live TV > All channels and
-add it to `CHANNELS` in `live_tv.py` as `(downs, rights)` counted from 101.
-Number buttons go to channels in order, so a new channel shifts the ones
-above it to the next button: relabel them.
-If its banner has a digit `screen.py` can't read yet, `live_tv.py` saves the
+`lineup.json` has every DStv channel and its tile in Live TV > All channels
+(4 to a row from 101), built by `lineup.py` from DStv's guide and checked
+against tiles seen on the TV; see `lineup.py` for how sure each one is. CH+ and
+CH- don't depend on it: they move one tile and find the ends of the list on
+screen. Each time the banner shows a channel's number the Pi records its tile
+in `seen_tiles.json`, so the list corrects itself as channels get watched.
+`.venv/bin/python live_tv.py 401` goes to any channel in the list; `up` and
+`down` step like CH+ and CH-.
+
+## Changing the shortcuts
+
+Number buttons 1-6 go to the channels in `SHORTCUTS` at the top of
+`live_tv.py`, in that order; buttons 7, 8, 9 and 0 take the next four if you
+add them. Any channel in `lineup.json` works. Relabel the buttons to match.
+If a banner has a digit `screen.py` can't read yet, `live_tv.py` saves the
 frame to `unread_banner.png`; add the digit's shape to `DIGITS` in `screen.py`.
+Until then that channel is trusted from the grid rather than checked.

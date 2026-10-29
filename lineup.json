@@ -1,0 +1,950 @@
+[
+ {
+  "number": "101",
+  "name": "M-Net",
+  "tile": 0,
+  "confidence": "seen"
+ },
+ {
+  "number": "106",
+  "name": "M Movies+",
+  "tile": 1,
+  "confidence": "unsure"
+ },
+ {
+  "number": "107",
+  "name": "M Movies Stars",
+  "tile": 2,
+  "confidence": "unsure"
+ },
+ {
+  "number": "108",
+  "name": "M Movies Legends",
+  "tile": 3,
+  "confidence": "unsure"
+ },
+ {
+  "number": "109",
+  "name": "SWITCH’D ON 109",
+  "tile": 4,
+  "confidence": "unsure"
+ },
+ {
+  "number": "110",
+  "name": "SWITCH’D ON 110",
+  "tile": 5,
+  "confidence": "unsure"
+ },
+ {
+  "number": "112",
+  "name": "Studio Universal",
+  "tile": 6,
+  "confidence": "unsure"
+ },
+ {
+  "number": "113",
+  "name": "MovieRoom",
+  "tile": 7,
+  "confidence": "unsure"
+ },
+ {
+  "number": "114",
+  "name": "KIX",
+  "tile": 8,
+  "confidence": "unsure"
+ },
+ {
+  "number": "117",
+  "name": "Universal TV",
+  "tile": 9,
+  "confidence": "unsure"
+ },
+ {
+  "number": "118",
+  "name": "TeleMundo",
+  "tile": 10,
+  "confidence": "unsure"
+ },
+ {
+  "number": "120",
+  "name": "BBC Brit",
+  "tile": 10,
+  "confidence": "seen"
+ },
+ {
+  "number": "121",
+  "name": "Discovery Channel",
+  "tile": 11,
+  "confidence": "inferred"
+ },
+ {
+  "number": "122",
+  "name": "Comedy Central",
+  "tile": 12,
+  "confidence": "inferred"
+ },
+ {
+  "number": "124",
+  "name": "Bravo",
+  "tile": 13,
+  "confidence": "inferred"
+ },
+ {
+  "number": "128",
+  "name": "WWE Channel",
+  "tile": 14,
+  "confidence": "inferred"
+ },
+ {
+  "number": "130",
+  "name": "MTV",
+  "tile": 15,
+  "confidence": "inferred"
+ },
+ {
+  "number": "133",
+  "name": "Novelas+",
+  "tile": 16,
+  "confidence": "inferred"
+ },
+ {
+  "number": "134",
+  "name": "BBC UKTV",
+  "tile": 17,
+  "confidence": "inferred"
+ },
+ {
+  "number": "135",
+  "name": "TLC South Africa",
+  "tile": 18,
+  "confidence": "inferred"
+ },
+ {
+  "number": "136",
+  "name": "Discovery Family",
+  "tile": 19,
+  "confidence": "inferred"
+ },
+ {
+  "number": "137",
+  "name": "TNT Africa",
+  "tile": 20,
+  "confidence": "inferred"
+ },
+ {
+  "number": "138",
+  "name": "eMovies",
+  "tile": 21,
+  "confidence": "seen"
+ },
+ {
+  "number": "140",
+  "name": "eMovies Extra",
+  "tile": 22,
+  "confidence": "unsure"
+ },
+ {
+  "number": "144",
+  "name": "kykNET",
+  "tile": 23,
+  "confidence": "unsure"
+ },
+ {
+  "number": "145",
+  "name": "kykNET & kie",
+  "tile": 24,
+  "confidence": "unsure"
+ },
+ {
+  "number": "146",
+  "name": "kykNET NOU",
+  "tile": 25,
+  "confidence": "unsure"
+ },
+ {
+  "number": "147",
+  "name": "VIA",
+  "tile": 26,
+  "confidence": "unsure"
+ },
+ {
+  "number": "148",
+  "name": "KykNet Lekker",
+  "tile": 27,
+  "confidence": "unsure"
+ },
+ {
+  "number": "151",
+  "name": "AfricaMagic Showcase",
+  "tile": 28,
+  "confidence": "unsure"
+ },
+ {
+  "number": "152",
+  "name": "AfricaMagic Epic",
+  "tile": 29,
+  "confidence": "unsure"
+ },
+ {
+  "number": "154",
+  "name": "AfricaMagic Family",
+  "tile": 30,
+  "confidence": "unsure"
+ },
+ {
+  "number": "155",
+  "name": "Real Time",
+  "tile": 31,
+  "confidence": "unsure"
+ },
+ {
+  "number": "157",
+  "name": "Moja Love",
+  "tile": 32,
+  "confidence": "unsure"
+ },
+ {
+  "number": "158",
+  "name": "Moja 9.9",
+  "tile": 33,
+  "confidence": "unsure"
+ },
+ {
+  "number": "160",
+  "name": "Star Khanya",
+  "tile": 34,
+  "confidence": "unsure"
+ },
+ {
+  "number": "161",
+  "name": "Mzansi Magic",
+  "tile": 35,
+  "confidence": "unsure"
+ },
+ {
+  "number": "163",
+  "name": "Wethu +",
+  "tile": 36,
+  "confidence": "unsure"
+ },
+ {
+  "number": "164",
+  "name": "Mzansi Bioskop",
+  "tile": 37,
+  "confidence": "unsure"
+ },
+ {
+  "number": "166",
+  "name": "Zee World",
+  "tile": 38,
+  "confidence": "unsure"
+ },
+ {
+  "number": "167",
+  "name": "Star Life",
+  "tile": 37,
+  "confidence": "seen"
+ },
+ {
+  "number": "168",
+  "name": "ROK",
+  "tile": 38,
+  "confidence": "inferred"
+ },
+ {
+  "number": "169",
+  "name": "Zee Zonke",
+  "tile": 39,
+  "confidence": "inferred"
+ },
+ {
+  "number": "171",
+  "name": "Discovery ID",
+  "tile": 40,
+  "confidence": "inferred"
+ },
+ {
+  "number": "174",
+  "name": "BBC Lifestyle",
+  "tile": 41,
+  "confidence": "inferred"
+ },
+ {
+  "number": "175",
+  "name": "Food Network",
+  "tile": 42,
+  "confidence": "inferred"
+ },
+ {
+  "number": "176",
+  "name": "The Home Channel",
+  "tile": 43,
+  "confidence": "inferred"
+ },
+ {
+  "number": "177",
+  "name": "HGTV",
+  "tile": 44,
+  "confidence": "inferred"
+ },
+ {
+  "number": "179",
+  "name": "Travel Channel",
+  "tile": 45,
+  "confidence": "inferred"
+ },
+ {
+  "number": "181",
+  "name": "National Geographic",
+  "tile": 46,
+  "confidence": "inferred"
+ },
+ {
+  "number": "182",
+  "name": "Nat Geo Wild",
+  "tile": 47,
+  "confidence": "inferred"
+ },
+ {
+  "number": "183",
+  "name": "WildEarth",
+  "tile": 48,
+  "confidence": "inferred"
+ },
+ {
+  "number": "184",
+  "name": "BBC Earth",
+  "tile": 49,
+  "confidence": "inferred"
+ },
+ {
+  "number": "185",
+  "name": "Curiosity Channel",
+  "tile": 50,
+  "confidence": "inferred"
+ },
+ {
+  "number": "186",
+  "name": "History",
+  "tile": 51,
+  "confidence": "inferred"
+ },
+ {
+  "number": "189",
+  "name": "IGNITION",
+  "tile": 52,
+  "confidence": "inferred"
+ },
+ {
+  "number": "190",
+  "name": "Spice TV",
+  "tile": 53,
+  "confidence": "inferred"
+ },
+ {
+  "number": "191",
+  "name": "SABC 1",
+  "tile": 54,
+  "confidence": "inferred"
+ },
+ {
+  "number": "192",
+  "name": "SABC 2",
+  "tile": 55,
+  "confidence": "inferred"
+ },
+ {
+  "number": "193",
+  "name": "SABC 3",
+  "tile": 56,
+  "confidence": "inferred"
+ },
+ {
+  "number": "194",
+  "name": "eTV",
+  "tile": 57,
+  "confidence": "inferred"
+ },
+ {
+  "number": "195",
+  "name": "eExtra",
+  "tile": 58,
+  "confidence": "inferred"
+ },
+ {
+  "number": "199",
+  "name": "SS Events",
+  "tile": 59,
+  "confidence": "inferred"
+ },
+ {
+  "number": "200",
+  "name": "SS Blitz",
+  "tile": 60,
+  "confidence": "inferred"
+ },
+ {
+  "number": "201",
+  "name": "SS Grandstand",
+  "tile": 61,
+  "confidence": "seen"
+ },
+ {
+  "number": "202",
+  "name": "SS PSL",
+  "tile": 62,
+  "confidence": "inferred"
+ },
+ {
+  "number": "203",
+  "name": "SS Premier League",
+  "tile": 63,
+  "confidence": "seen"
+ },
+ {
+  "number": "204",
+  "name": "SS La Liga",
+  "tile": 64,
+  "confidence": "seen"
+ },
+ {
+  "number": "205",
+  "name": "SS Football",
+  "tile": 65,
+  "confidence": "inferred"
+ },
+ {
+  "number": "206",
+  "name": "SS Football Plus",
+  "tile": 66,
+  "confidence": "inferred"
+ },
+ {
+  "number": "207",
+  "name": "SS Kickoff",
+  "tile": 67,
+  "confidence": "inferred"
+ },
+ {
+  "number": "208",
+  "name": "SS Africa",
+  "tile": 68,
+  "confidence": "inferred"
+ },
+ {
+  "number": "209",
+  "name": "SS Action",
+  "tile": 69,
+  "confidence": "inferred"
+ },
+ {
+  "number": "210",
+  "name": "SS Extra",
+  "tile": 70,
+  "confidence": "inferred"
+ },
+ {
+  "number": "211",
+  "name": "SS Rugby",
+  "tile": 71,
+  "confidence": "inferred"
+ },
+ {
+  "number": "212",
+  "name": "SS Cricket",
+  "tile": 72,
+  "confidence": "seen"
+ },
+ {
+  "number": "213",
+  "name": "SS Golf",
+  "tile": 73,
+  "confidence": "seen"
+ },
+ {
+  "number": "214",
+  "name": "SS Tennis",
+  "tile": 74,
+  "confidence": "inferred"
+ },
+ {
+  "number": "215",
+  "name": "SS MotorSport",
+  "tile": 75,
+  "confidence": "inferred"
+ },
+ {
+  "number": "216",
+  "name": "SS Schools",
+  "tile": 76,
+  "confidence": "inferred"
+ },
+ {
+  "number": "217",
+  "name": "SS Extra 2",
+  "tile": 77,
+  "confidence": "inferred"
+ },
+ {
+  "number": "218",
+  "name": "ESPN",
+  "tile": 78,
+  "confidence": "inferred"
+ },
+ {
+  "number": "219",
+  "name": "ESPN 2",
+  "tile": 79,
+  "confidence": "inferred"
+ },
+ {
+  "number": "236",
+  "name": "SportyTV",
+  "tile": 80,
+  "confidence": "inferred"
+ },
+ {
+  "number": "240",
+  "name": "Racing240",
+  "tile": 81,
+  "confidence": "inferred"
+ },
+ {
+  "number": "241",
+  "name": "SS Maximo",
+  "tile": 82,
+  "confidence": "inferred"
+ },
+ {
+  "number": "251",
+  "name": "Soweto TV",
+  "tile": 83,
+  "confidence": "inferred"
+ },
+ {
+  "number": "260",
+  "name": "Mpuma Kapa TV",
+  "tile": 84,
+  "confidence": "inferred"
+ },
+ {
+  "number": "261",
+  "name": "1KZN TV",
+  "tile": 85,
+  "confidence": "inferred"
+ },
+ {
+  "number": "262",
+  "name": "Tshwane TV",
+  "tile": 86,
+  "confidence": "inferred"
+ },
+ {
+  "number": "263",
+  "name": "Cape Town TV",
+  "tile": 87,
+  "confidence": "inferred"
+ },
+ {
+  "number": "265",
+  "name": "GauTV",
+  "tile": 88,
+  "confidence": "inferred"
+ },
+ {
+  "number": "292",
+  "name": "Lesotho TV",
+  "tile": 89,
+  "confidence": "inferred"
+ },
+ {
+  "number": "299",
+  "name": "NTA International",
+  "tile": 90,
+  "confidence": "inferred"
+ },
+ {
+  "number": "300",
+  "name": "PlayRoom",
+  "tile": 91,
+  "confidence": "inferred"
+ },
+ {
+  "number": "301",
+  "name": "Cartoon Network",
+  "tile": 92,
+  "confidence": "inferred"
+ },
+ {
+  "number": "302",
+  "name": "Cartoonito",
+  "tile": 93,
+  "confidence": "inferred"
+ },
+ {
+  "number": "303",
+  "name": "Disney Channel",
+  "tile": 94,
+  "confidence": "inferred"
+ },
+ {
+  "number": "304",
+  "name": "DreamWorks",
+  "tile": 95,
+  "confidence": "inferred"
+ },
+ {
+  "number": "305",
+  "name": "Nickelodeon",
+  "tile": 96,
+  "confidence": "inferred"
+ },
+ {
+  "number": "306",
+  "name": "Cbeebies",
+  "tile": 97,
+  "confidence": "inferred"
+ },
+ {
+  "number": "307",
+  "name": "NickJr",
+  "tile": 98,
+  "confidence": "inferred"
+ },
+ {
+  "number": "308",
+  "name": "NickTOONS",
+  "tile": 99,
+  "confidence": "inferred"
+ },
+ {
+  "number": "309",
+  "name": "Disney Junior",
+  "tile": 100,
+  "confidence": "inferred"
+ },
+ {
+  "number": "310",
+  "name": "Jim Jam",
+  "tile": 101,
+  "confidence": "inferred"
+ },
+ {
+  "number": "311",
+  "name": "eToonz",
+  "tile": 102,
+  "confidence": "inferred"
+ },
+ {
+  "number": "314",
+  "name": "Moonbug",
+  "tile": 103,
+  "confidence": "inferred"
+ },
+ {
+  "number": "319",
+  "name": "Mindset",
+  "tile": 104,
+  "confidence": "inferred"
+ },
+ {
+  "number": "320",
+  "name": "Channel O",
+  "tile": 105,
+  "confidence": "inferred"
+ },
+ {
+  "number": "321",
+  "name": "Mzansi Music",
+  "tile": 106,
+  "confidence": "inferred"
+ },
+ {
+  "number": "322",
+  "name": "Base Pulse",
+  "tile": 107,
+  "confidence": "inferred"
+ },
+ {
+  "number": "325",
+  "name": "TRACE Urban",
+  "tile": 108,
+  "confidence": "inferred"
+ },
+ {
+  "number": "326",
+  "name": "TRACE Ngoma",
+  "tile": 109,
+  "confidence": "inferred"
+ },
+ {
+  "number": "327",
+  "name": "Sound City",
+  "tile": 110,
+  "confidence": "inferred"
+ },
+ {
+  "number": "331",
+  "name": "One Gospel",
+  "tile": 111,
+  "confidence": "inferred"
+ },
+ {
+  "number": "332",
+  "name": "TRACE Gospel",
+  "tile": 112,
+  "confidence": "inferred"
+ },
+ {
+  "number": "340",
+  "name": "Dumisa",
+  "tile": 113,
+  "confidence": "inferred"
+ },
+ {
+  "number": "341",
+  "name": "FAITH",
+  "tile": 114,
+  "confidence": "inferred"
+ },
+ {
+  "number": "342",
+  "name": "Day Star",
+  "tile": 115,
+  "confidence": "inferred"
+ },
+ {
+  "number": "343",
+  "name": "TBN",
+  "tile": 116,
+  "confidence": "inferred"
+ },
+ {
+  "number": "344",
+  "name": "Church TV",
+  "tile": 117,
+  "confidence": "inferred"
+ },
+ {
+  "number": "345",
+  "name": "iNX Prime",
+  "tile": 118,
+  "confidence": "inferred"
+ },
+ {
+  "number": "347",
+  "name": "Hilaal TV",
+  "tile": 119,
+  "confidence": "inferred"
+ },
+ {
+  "number": "400",
+  "name": "BBC News",
+  "tile": 120,
+  "confidence": "inferred"
+ },
+ {
+  "number": "401",
+  "name": "CNN International",
+  "tile": 121,
+  "confidence": "inferred"
+ },
+ {
+  "number": "402",
+  "name": "Sky News",
+  "tile": 122,
+  "confidence": "inferred"
+ },
+ {
+  "number": "403",
+  "name": "eNCA",
+  "tile": 123,
+  "confidence": "inferred"
+ },
+ {
+  "number": "404",
+  "name": "SABC News",
+  "tile": 124,
+  "confidence": "inferred"
+ },
+ {
+  "number": "405",
+  "name": "Newzroom Afrika",
+  "tile": 125,
+  "confidence": "inferred"
+ },
+ {
+  "number": "406",
+  "name": "Al Jazeera",
+  "tile": 126,
+  "confidence": "inferred"
+ },
+ {
+  "number": "407",
+  "name": "Russia Today",
+  "tile": 127,
+  "confidence": "inferred"
+ },
+ {
+  "number": "408",
+  "name": "Parliamentary Service",
+  "tile": 128,
+  "confidence": "inferred"
+ },
+ {
+  "number": "409",
+  "name": "CGTN News",
+  "tile": 129,
+  "confidence": "inferred"
+ },
+ {
+  "number": "410",
+  "name": "CNBC Africa",
+  "tile": 130,
+  "confidence": "inferred"
+ },
+ {
+  "number": "411",
+  "name": "Bloomberg Television",
+  "tile": 131,
+  "confidence": "inferred"
+ },
+ {
+  "number": "412",
+  "name": "Business Day",
+  "tile": 132,
+  "confidence": "inferred"
+ },
+ {
+  "number": "413",
+  "name": "NDTV 24x7",
+  "tile": 133,
+  "confidence": "inferred"
+ },
+ {
+  "number": "414",
+  "name": "EuroNews",
+  "tile": 134,
+  "confidence": "inferred"
+ },
+ {
+  "number": "415",
+  "name": "France 24",
+  "tile": 135,
+  "confidence": "inferred"
+ },
+ {
+  "number": "416",
+  "name": "Arise News",
+  "tile": 136,
+  "confidence": "inferred"
+ },
+ {
+  "number": "417",
+  "name": "Africanews",
+  "tile": 137,
+  "confidence": "inferred"
+ },
+ {
+  "number": "430",
+  "name": "RAI International",
+  "tile": 138,
+  "confidence": "inferred"
+ },
+ {
+  "number": "431",
+  "name": "NHK",
+  "tile": 139,
+  "confidence": "inferred"
+ },
+ {
+  "number": "435",
+  "name": "RTPmundo (P)",
+  "tile": 140,
+  "confidence": "inferred"
+ },
+ {
+  "number": "437",
+  "name": "TV5 Monde Afrique",
+  "tile": 141,
+  "confidence": "inferred"
+ },
+ {
+  "number": "447",
+  "name": "CCTV 4",
+  "tile": 142,
+  "confidence": "inferred"
+ },
+ {
+  "number": "450",
+  "name": "SET Asia",
+  "tile": 143,
+  "confidence": "inferred"
+ },
+ {
+  "number": "452",
+  "name": "ZeeTV",
+  "tile": 144,
+  "confidence": "inferred"
+ },
+ {
+  "number": "453",
+  "name": "Star Plus",
+  "tile": 145,
+  "confidence": "inferred"
+ },
+ {
+  "number": "455",
+  "name": "Star Vijay",
+  "tile": 146,
+  "confidence": "inferred"
+ },
+ {
+  "number": "456",
+  "name": "Colors",
+  "tile": 147,
+  "confidence": "inferred"
+ },
+ {
+  "number": "457",
+  "name": "SET Max",
+  "tile": 148,
+  "confidence": "inferred"
+ },
+ {
+  "number": "460",
+  "name": "Zee Cinema",
+  "tile": 149,
+  "confidence": "inferred"
+ },
+ {
+  "number": "489",
+  "name": "Maaddii Abol",
+  "tile": 150,
+  "confidence": "inferred"
+ },
+ {
+  "number": "510",
+  "name": "Telemundo (P)",
+  "tile": 151,
+  "confidence": "inferred"
+ },
+ {
+  "number": "512",
+  "name": "My Channel Africa (P)",
+  "tile": 152,
+  "confidence": "inferred"
+ },
+ {
+  "number": "560",
+  "name": "TVM I (P)",
+  "tile": 153,
+  "confidence": "inferred"
+ },
+ {
+  "number": "877",
+  "name": "Kosmos 94.1",
+  "tile": 154,
+  "confidence": "inferred"
+ }
+]

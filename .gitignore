@@ -14,7 +14,9 @@ __pycache__/
 .DS_Store
 *:Zone.Identifier
 
-# Channel last seen playing, and banners with digits screen.py cannot read yet
+# Tile last seen playing, channels learned off the banner, and banners screen.py cannot read yet
 .last_channel
+.last_tile
+seen_tiles.json
 unread_banner.png
 unsettled_grid.png
