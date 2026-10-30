@@ -115,7 +115,9 @@ in `seen_tiles.json`, so the list corrects itself as channels get watched.
 ## Changing the shortcuts
 
 Number buttons 1-9 go to the channels in `SHORTCUTS` at the top of
-`live_tv.py`, in that order; button 0 takes a tenth if you add one. Any channel in `lineup.json` works. Relabel the buttons to match.
+`live_tv.py`, in that order; button 0 takes a tenth if you add one. Any channel in `lineup.json` works. Update `channel_card.html` (the
+printable button-to-channel card: open it in a browser and print on A4 with
+background graphics on) to match.
 If a banner has a digit `screen.py` can't read yet, `live_tv.py` saves the
 frame to `unread_banner.png`; add the digit's shape to `DIGITS` in `screen.py`.
 Until then that channel is trusted from the grid rather than checked.
