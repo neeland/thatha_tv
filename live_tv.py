@@ -1,4 +1,5 @@
 import asyncio
+import bisect
 import json
 import sys
 import time
@@ -18,7 +19,8 @@ LINEUP_FILE = Path(__file__).parent / "lineup.json"    # every channel's tile, b
 SEEN_FILE = Path(__file__).parent / "seen_tiles.json"  # channel read off the banner at each tile, learned as we go
 LAST_WATCHED = Path(__file__).parent / ".last_watched" # channel last played, for turning the TV back on to it
 DEFAULT_CHANNEL = "203"
-SHORTCUTS = ["167", "201", "203", "204", "212", "213"]  # number buttons 1-6, lowest first
+SHORTCUTS = ["167", "201", "203", "204", "212", "213", "401", "402", "403"]  # number buttons 1-9, lowest first
+TRIES = 3                  # the quick way, then twice more from a fresh start of DStv
 
 # Live TV > All channels lists every channel in ascending order, 4 tiles to a row, from 101 at
 # tile 0. TILES maps each channel to its tile: lineup.json's, overridden by tiles where the
@@ -28,6 +30,11 @@ TILES = {c["number"]: c["tile"] for c in LINEUP}
 CONFIDENT = {c["number"] for c in LINEUP if c["confidence"] != "unsure"}
 SEEN = json.loads(SEEN_FILE.read_text()) if SEEN_FILE.exists() else {}
 TILES.update(SEEN); CONFIDENT.update(SEEN)
+LAST_TILE = max(TILES.values())
+
+def position(number):
+    """Where a channel number falls in the list's ascending order."""
+    return bisect.bisect_left(sorted(int(n) for n in TILES), int(number))
 
 def number_at(tile):
     """Channel number at a tile, if we know it well enough to say so."""
@@ -192,13 +199,14 @@ async def open_grid(scr, playing, step):
         await asyncio.sleep(0.1)
     await scr.tv.button("BACK")
     try:
-        focus, _ = await scr.wait_for("grid", 4)
+        focus, _ = await scr.wait_for("grid", 8)          # slow for a minute or two after the TV turns on:
+                                                          # a second BACK then would leave the grid
     except TimeoutError:
         kind, _ = classify(await scr.grab())
         if kind not in ("dark", "player", "loading"):
             raise                                         # BACK did something else: don't press again blind
         await scr.tv.button("BACK")                       # still on the picture: a stream that was still
-        focus, _ = await scr.wait_for("grid", 6)          # starting ignored the first BACK
+        focus, _ = await scr.wait_for("grid", 8)          # starting ignored the first BACK
     if focus[1] != playing % 4:
         raise RuntimeError(f"Grid opened on column {focus[1]}, but tile {playing} is in column {playing % 4}")
     step("grid ready")
@@ -240,8 +248,8 @@ async def cold_start(tv, scr, tile, step):
     except Exception:
         pass                                              # wasn't running
     await tv.launch_app(DSTV_ID)
-    for _ in range(15):                                   # wait only as long as DStv takes to come up
-        await asyncio.sleep(1)
+    for _ in range(60):                                   # wait only as long as DStv takes to come up
+        await asyncio.sleep(0.25)
         if tv.tv_state.current_app_id == DSTV_ID:
             break
     step("DStv in foreground")
@@ -267,50 +275,43 @@ async def landed(scr, step):
         step(f"banner has digits we can't read yet, saved {UNREAD_BANNER.name}")
     return number
 
-async def main(channel=None, delta=0):
-    """Play `channel`, or with delta +1/-1 the next/previous channel in the list (CH+/CH-)."""
-    t0 = time.monotonic()
-    def step(msg): print(f"[{time.monotonic() - t0:5.1f}s] {msg}")
-    tv, was_off = await connect(step)
-    step("connected")
-    playing = int(STATE_FILE.read_text()) if STATE_FILE.exists() else None
-    warm = not was_off and playing is not None and tv.tv_state.current_app_id == DSTV_ID
-    if delta and not warm:
-        channel = DEFAULT_CHANNEL                         # nothing known to step from: start at the usual one
-        step(f"not sure what's playing, going to {channel}")
-    if channel:
-        tile = TILES[channel]
-        if warm and playing == tile:
-            step(f"already on {channel}")
-            return
-        what = channel_label(channel)
-        moves = len(grid_moves(playing, tile)) if warm else tile // 4 + tile % 4
+async def attempt(tv, playing, tile, channel, delta, what, step, opening=None):
+    """One go at playing `tile`: from the grid if `playing` (the tile DStv is on) is known, else by
+    restarting DStv. Returns the tile playing at the end. CH+/CH- (no `channel`) may stay put at
+    either end of the list."""
+    if playing is None:
+        moves = tile // 4 + tile % 4
+    elif channel:
+        moves = len(grid_moves(playing, tile))
     else:
-        tile = playing + delta
-        what = channel_label(number_at(tile)) if number_at(tile) else ("THE NEXT CHANNEL" if delta > 0 else "THE PREVIOUS CHANNEL")
         moves = 1 if tile // 4 == playing // 4 else 4
     scr = Screen(tv)
     # Measured: the grid opens in ~3s, moves take 0.4s each, the stream starts ~6.5s after ENTER
-    countdown = Countdown(tv, what, (4 if warm else 30) + 0.4 * moves + 7,
-                          None if warm else "🌅 WAKING UP · NEXT TIME IS QUICKER")
+    countdown = Countdown(tv, what, (4 if playing is not None else 30) + 0.4 * moves + 7, opening)
     try:
-        if not channel:
+        if playing is None:
+            await cold_start(tv, scr, tile, step)
+        elif channel:
+            await switch(scr, playing, tile, step)
+        else:
             tile = await step_tile(scr, playing, delta, step)
             if tile is None:
                 tile = playing
                 step("end of the list")
                 countdown.stop()
                 await toast(tv, two_lines("⏳ NO MORE CHANNELS THIS WAY ⏳", "STAYING ON THIS CHANNEL"))
-        elif warm:
-            await switch(scr, playing, tile, step)
-        else:
-            await cold_start(tv, scr, tile, step)
         step("ENTER, waiting for the picture")
         seen = await landed(scr, step)
-        if channel and seen not in (channel, None) and seen in CONFIDENT:  # a dropped key: hop on from where it landed
-            step(f"landed on {seen}, correcting")
-            await switch(scr, TILES[seen], tile, step)
-            seen = await landed(scr, step)
+        for _ in range(2):                                # landed on the wrong channel: hop to the right one
+            if not channel or seen in (channel, None):
+                break
+            at = SEEN.get(seen, tile)                     # a dropped key, if the banner has shown it elsewhere,
+            to = tile if at != tile else tile + position(channel) - position(seen)  # else the list is off here
+            if to == at or not 0 <= to <= LAST_TILE:
+                break
+            step(f"landed on {seen}, going on to tile {to}")
+            await switch(scr, at, to, step)
+            tile, seen = to, await landed(scr, step)
         if channel and seen not in (channel, None):
             raise RuntimeError(f"Wanted {channel} but the TV is showing {seen}")
         if seen:
@@ -319,13 +320,58 @@ async def main(channel=None, delta=0):
         if seen or channel or number_at(tile):
             LAST_WATCHED.write_text(f"{seen or channel or number_at(tile)}\n")
         step(f"playing tile {tile}: " + (seen or f"{channel or '?'} (banner unread, trusting the grid)"))
+        return tile
     except BaseException:
-        STATE_FILE.unlink(missing_ok=True)                # state unknown, next run starts fresh
-        await drop()
+        STATE_FILE.unlink(missing_ok=True)                # state unknown, the next go starts fresh
         raise
     finally:
         countdown.stop()
         await scr.close()
+
+async def main(channel=None, delta=0):
+    """Play `channel`, or with delta +1/-1 the next/previous channel in the list (CH+/CH-).
+
+    If a go fails it tries again from a fresh start of DStv, which works from any state the app
+    is in, so a failure only shows if all TRIES fail."""
+    t0 = time.monotonic()
+    def step(msg): print(f"[{time.monotonic() - t0:5.1f}s] {msg}")
+    tv, was_off = await connect(step)
+    step("connected")
+    playing = int(STATE_FILE.read_text()) if STATE_FILE.exists() else None
+    if was_off and playing is not None:                   # DStv usually stays in memory while the TV is
+        for _ in range(20):                               # off and comes back on the same channel: much
+            if tv.tv_state.current_app_id == DSTV_ID:     # quicker than starting it again
+                break
+            await asyncio.sleep(0.25)
+    if tv.tv_state.current_app_id != DSTV_ID:
+        playing = None
+    if delta and playing is None:
+        channel = DEFAULT_CHANNEL                         # nothing known to step from: start at the usual one
+        step(f"not sure what's playing, going to {channel}")
+    if channel:
+        tile = TILES[channel]
+        if playing == tile and not was_off:
+            step(f"already on {channel}")
+            return
+        what = channel_label(channel)
+    else:
+        tile = playing + delta
+        what = channel_label(number_at(tile)) if number_at(tile) else ("THE NEXT CHANNEL" if delta > 0 else "THE PREVIOUS CHANNEL")
+    opening = "🌅 WAKING UP · NEXT TIME IS QUICKER" if playing is None else None
+    for go in range(1, TRIES + 1):
+        try:
+            return await attempt(tv, playing, tile, channel, delta, what, step, opening)
+        except Exception as err:
+            await drop()
+            if go == TRIES:
+                raise
+            step(f"that didn't work ({err!r}), trying again from a fresh start of DStv")
+            tv, _ = await connect(step)
+            playing, tile = None, max(0, min(tile, LAST_TILE))
+            opening = "ALMOST THERE · JUST A LITTLE LONGER"
+        except BaseException:
+            await drop()
+            raise
 
 async def once(**target):
     """main() from the command line: don't leave the connection open at exit."""

@@ -58,7 +58,7 @@ The Flirc is programmed (Flirc app, *Controllers > Full Keyboard*) so that:
 
 | Remote button | Flirc key | Does |
 |---|---|---|
-| 1 2 3 4 5 6 7 8 9 0 | A B C D E F G H I J | shortcuts, lowest first: 1 = 167, 2 = 201, 3 = 203, 4 = 204, 5 = 212, 6 = 213 |
+| 1 2 3 4 5 6 7 8 9 0 | A B C D E F G H I J | shortcuts, lowest first: 1 = 167, 2 = 201, 3 = 203, 4 = 204, 5 = 212, 6 = 213, 7 = 401, 8 = 402, 9 = 403 |
 | CH+ / CH- | = / - | next / previous channel in DStv's list: every channel, not just the shortcuts |
 | up / down arrows | Up / Down (or Volume Up / Down) | volume (hold to keep going) |
 | on/off | P (or Home / Power) | TV off if it's on, on if it's off |
@@ -114,9 +114,8 @@ in `seen_tiles.json`, so the list corrects itself as channels get watched.
 
 ## Changing the shortcuts
 
-Number buttons 1-6 go to the channels in `SHORTCUTS` at the top of
-`live_tv.py`, in that order; buttons 7, 8, 9 and 0 take the next four if you
-add them. Any channel in `lineup.json` works. Relabel the buttons to match.
+Number buttons 1-9 go to the channels in `SHORTCUTS` at the top of
+`live_tv.py`, in that order; button 0 takes a tenth if you add one. Any channel in `lineup.json` works. Relabel the buttons to match.
 If a banner has a digit `screen.py` can't read yet, `live_tv.py` saves the
 frame to `unread_banner.png`; add the digit's shape to `DIGITS` in `screen.py`.
 Until then that channel is trusted from the grid rather than checked.

@@ -3,7 +3,7 @@
 The remote's IR is picked up by a Flirc USB receiver plugged into the Pi, which
 turns each button into a key press. The Flirc is programmed (Full Keyboard) so:
 
-    1-9, 0          a-j            number buttons: live_tv.SHORTCUTS, lowest first
+    1-9, 0          a-j            number buttons: live_tv.SHORTCUTS, lowest first (0 not set)
     CH+ / CH-       = / -          next / previous channel in DStv's list, any channel
     up / down       Up / Down      volume (Volume Up / Volume Down work too)
     on/off          P              TV off if on, on if off (Home or Power work too)
@@ -27,7 +27,7 @@ MUTE_KEYS = {ecodes.KEY_M, ecodes.KEY_MUTE}
 VOLUME_KEYS = {ecodes.KEY_VOLUMEUP: "volume_up", ecodes.KEY_UP: "volume_up",     # the remote's up and down
                ecodes.KEY_VOLUMEDOWN: "volume_down", ecodes.KEY_DOWN: "volume_down"}  # arrows, as either key
 POWER_KEYS = {ecodes.KEY_P, ecodes.KEY_HOME, ecodes.KEY_HOMEPAGE, ecodes.KEY_POWER, ecodes.KEY_SLEEP}
-CHANGE_TIMEOUT = 120              # seconds before giving up on a stuck channel change
+CHANGE_TIMEOUT = 300              # seconds before giving up on a stuck channel change, retries included
 WAIT_MESSAGE_EVERY = 5            # seconds between "please wait" pop-ups, so they don't pile up
 
 log = logging.getLogger("buttons")
@@ -120,10 +120,9 @@ class Remote:
 
     async def power(self):
         """On/off: turn the TV off if it's on; if it's off, turn it on straight to the last channel
-        watched (the slow DStv start happens now, under the waking-up message, not on the next
-        channel press). Either way the channel we knew to be playing no longer counts."""
+        watched (any slow DStv start happens now, under the waking-up message, not on the next
+        channel press)."""
         try:
-            live_tv.STATE_FILE.unlink(missing_ok=True)
             try:
                 tv, _ = await live_tv.connect(log.info, wake=False)
             except Exception:
