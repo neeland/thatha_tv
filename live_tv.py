@@ -1,6 +1,7 @@
 import asyncio
 import bisect
 import json
+import logging
 import sys
 import time
 from pathlib import Path
@@ -12,6 +13,7 @@ from screen import Screen, banner_channel, classify
 
 TV_IP, TV_MAC = "192.168.10.232", "F4:14:BF:E7:D2:7C"
 DSTV_ID = "com.multichoice.tvapp"
+log = logging.getLogger("live_tv")
 CLIENT_KEY = (Path(__file__).parent / ".lgtv_client_key").read_text().strip()
 STATE_FILE = Path(__file__).parent / ".last_tile"      # grid tile last seen playing, for fast switching
 UNREAD_BANNER = Path(__file__).parent / "unread_banner.png"  # saved when the banner has digits we can't read yet
@@ -29,6 +31,19 @@ LINEUP = json.loads(LINEUP_FILE.read_text())
 TILES = {c["number"]: c["tile"] for c in LINEUP}
 CONFIDENT = {c["number"] for c in LINEUP if c["confidence"] != "unsure"}
 SEEN = json.loads(SEEN_FILE.read_text()) if SEEN_FILE.exists() else {}
+
+def clashes(number, tile, others):
+    """Channels in `others` that can't be where they are if `number` is at `tile`: the list is in
+    ascending order, one channel a tile, so tiles must rise with the numbers and by no more."""
+    n = int(number)
+    return [m for m, t in others.items() if m != number and
+            ((int(m) - n) * (t - tile) <= 0 or abs(t - tile) > abs(int(m) - n))]
+
+while True:                                               # drop learned tiles that clash with the rest,
+    worst = max(SEEN, key=lambda n: len(clashes(n, SEEN[n], SEEN)), default=None)  # most clashes first
+    if worst is None or not clashes(worst, SEEN[worst], SEEN):
+        break
+    del SEEN[worst]
 TILES.update(SEEN); CONFIDENT.update(SEEN)
 LAST_TILE = max(TILES.values())
 
@@ -41,7 +56,7 @@ def tile_of(number):
     nearest channel the banner has shown (the list's order holds even where its tiles are off,
     e.g. 401 sits 3 tiles later than lineup.json says), else lineup.json's."""
     if number in SEEN or not SEEN:
-        return TILES[number]
+        return TILES.get(number, position(number))
     anchor = min(SEEN, key=lambda n: abs(position(n) - position(number)))
     return max(0, min(SEEN[anchor] + position(number) - position(anchor), LAST_TILE))
 
@@ -51,6 +66,16 @@ def number_at(tile):
         if t == tile:
             return number
     return next((n for n, t in TILES.items() if t == tile and n in CONFIDENT), None)
+
+def located(number, steered):
+    """The tile the banner's `number` is playing from: where we steered to, unless that clashes
+    with where the banner has shown channels before (a key the TV dropped, or a wrong idea of
+    where we started); then where it was seen before, or failing that a guess (None if a guess)."""
+    if number in SEEN and not clashes(number, SEEN[number], SEEN):
+        return SEEN[number]
+    if not clashes(number, steered, SEEN):
+        return steered
+    return None
 
 def remember(number, tile):
     """Banner showed `number` playing from `tile`."""
@@ -284,6 +309,11 @@ async def landed(scr, step):
         step(f"banner has digits we can't read yet, saved {UNREAD_BANNER.name}")
     return number
 
+class Landed(RuntimeError):
+    """Ended on the wrong channel, but one whose tile we know, so the next go can start from it."""
+    def __init__(self, message, tile):
+        super().__init__(message); self.tile = tile
+
 async def attempt(tv, playing, tile, channel, delta, what, step, opening=None):
     """One go at playing `tile`: from the grid if `playing` (the tile DStv is on) is known, else by
     restarting DStv. Returns the tile playing at the end. CH+/CH- (no `channel`) may stay put at
@@ -314,24 +344,31 @@ async def attempt(tv, playing, tile, channel, delta, what, step, opening=None):
         for _ in range(2):                                # landed on the wrong channel: hop to the right one
             if not channel or seen in (channel, None):
                 break
-            at = SEEN.get(seen, tile)                     # a dropped key, if the banner has shown it elsewhere,
-            to = tile if at != tile else tile + position(channel) - position(seen)  # else the list is off here
+            at = located(seen, tile)
             if at == tile:
-                remember(seen, tile)                      # so the channels around it are guessed right next time
+                remember(seen, tile)                      # the list is off here: so the channels around it
+            at = tile_of(seen) if at is None else at      # are guessed right next time
+            to = tile if at != tile else tile + position(channel) - position(seen)
             if to == at or not 0 <= to <= LAST_TILE:
                 break
             step(f"landed on {seen}, going on to tile {to}")
             await switch(scr, at, to, step)
             tile, seen = to, await landed(scr, step)
-        if channel and seen not in (channel, None):
-            raise RuntimeError(f"Wanted {channel} but the TV is showing {seen}")
         if seen:
-            remember(seen, tile)
+            at = located(seen, tile)
+            if at is not None:
+                remember(seen, at)
+            tile = tile_of(seen) if at is None else at
+        if channel and seen not in (channel, None):
+            raise Landed(f"Wanted {channel} but the TV is showing {seen}", tile)
         STATE_FILE.write_text(f"{tile}\n")
         if seen or channel or number_at(tile):
             LAST_WATCHED.write_text(f"{seen or channel or number_at(tile)}\n")
         step(f"playing tile {tile}: " + (seen or f"{channel or '?'} (banner unread, trusting the grid)"))
         return tile
+    except Landed as err:
+        STATE_FILE.write_text(f"{err.tile}\n")
+        raise
     except BaseException:
         STATE_FILE.unlink(missing_ok=True)                # state unknown, the next go starts fresh
         raise
@@ -345,7 +382,7 @@ async def main(channel=None, delta=0):
     If a go fails it tries again from a fresh start of DStv, which works from any state the app
     is in, so a failure only shows if all TRIES fail."""
     t0 = time.monotonic()
-    def step(msg): print(f"[{time.monotonic() - t0:5.1f}s] {msg}")
+    def step(msg): log.info(f"[{time.monotonic() - t0:5.1f}s] {msg}")
     tv, was_off = await connect(step)
     step("connected")
     playing = int(STATE_FILE.read_text()) if STATE_FILE.exists() else None
@@ -376,9 +413,13 @@ async def main(channel=None, delta=0):
             await drop()
             if go == TRIES:
                 raise
-            step(f"that didn't work ({err!r}), trying again from a fresh start of DStv")
             tv, _ = await connect(step)
-            playing, tile = None, max(0, min(tile, LAST_TILE))
+            if isinstance(err, Landed) and channel and tv.tv_state.current_app_id == DSTV_ID:
+                step(f"{err}, going on from there")       # the quick way again, from where it is
+                playing, tile = err.tile, tile_of(channel)
+            else:
+                step(f"that didn't work ({err!r}), trying again from a fresh start of DStv")
+                playing, tile = None, max(0, min(tile, LAST_TILE))
             opening = "ALMOST THERE · JUST A LITTLE LONGER"
         except BaseException:
             await drop()
@@ -392,6 +433,7 @@ async def once(**target):
         await drop()
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
     arg = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_CHANNEL
     if arg == "on":
         sys.exit(power_on())

@@ -14,7 +14,9 @@ TV says "do not touch anything"; volume and mute still work.
 """
 import asyncio
 import logging
+from logging.handlers import RotatingFileHandler
 import time
+from pathlib import Path
 import evdev
 from evdev import ecodes
 import live_tv
@@ -31,6 +33,7 @@ CHANGE_TIMEOUT = 300              # seconds before giving up on a stuck channel 
 WAIT_MESSAGE_EVERY = 5            # seconds between "please wait" pop-ups, so they don't pile up
 
 log = logging.getLogger("buttons")
+LOG_FILE = Path(__file__).parent / "thatha_tv.log"   # kept across reboots
 
 def key_name(code):
     name = ecodes.KEY.get(code, str(code))
@@ -187,7 +190,9 @@ async def main():
         await asyncio.sleep(3)
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", handlers=[
+        logging.StreamHandler(),                              # the journal, which a reboot clears
+        RotatingFileHandler(LOG_FILE, maxBytes=2_000_000, backupCount=2)])
     for key, channel in CHANNEL_KEYS.items():
         log.info("Button %s (%s): channel %s", "1234567890"[NUMBER_KEYS.index(key)], key_name(key), channel)
     log.info("CH+ = and CH- -, volume Up/Down, on/off P (or Home), mute M")
