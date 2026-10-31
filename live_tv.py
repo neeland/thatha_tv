@@ -406,6 +406,8 @@ async def main(channel=None, delta=0):
         tile = playing + delta
         what = channel_label(number_at(tile)) if number_at(tile) else ("THE NEXT CHANNEL" if delta > 0 else "THE PREVIOUS CHANNEL")
     opening = "🌅 WAKING UP · NEXT TIME IS QUICKER" if playing is None else None
+    if was_off:
+        await toast(tv, two_lines("👋 HELLO B.A. 👋", "YOUR TV IS TURNING ON"))
     for go in range(1, TRIES + 1):
         try:
             return await attempt(tv, playing, tile, channel, delta, what, step, opening)
