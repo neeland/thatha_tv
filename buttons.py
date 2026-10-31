@@ -3,7 +3,7 @@
 The remote's IR is picked up by a Flirc USB receiver plugged into the Pi, which
 turns each button into a key press. The Flirc is programmed (Full Keyboard) so:
 
-    1-9, 0          a-j            number buttons: live_tv.SHORTCUTS, lowest first (0 not set)
+    1-9, 0          a-j            number buttons: live_tv.SHORTCUTS, in that order
     CH+ / CH-       = / -          next / previous channel in DStv's list, any channel
     up / down       Up / Down      volume (Volume Up / Volume Down work too)
     on/off          P              TV off if on, on if off (Home or Power work too)

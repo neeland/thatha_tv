@@ -19,7 +19,7 @@ LINEUP_FILE = Path(__file__).parent / "lineup.json"    # every channel's tile, b
 SEEN_FILE = Path(__file__).parent / "seen_tiles.json"  # channel read off the banner at each tile, learned as we go
 LAST_WATCHED = Path(__file__).parent / ".last_watched" # channel last played, for turning the TV back on to it
 DEFAULT_CHANNEL = "203"
-SHORTCUTS = ["167", "201", "203", "204", "212", "213", "401", "402", "403"]  # number buttons 1-9, lowest first
+SHORTCUTS = ["167", "201", "203", "204", "212", "213", "401", "402", "403", "400"]  # number buttons 1-9, then 0
 TRIES = 3                  # the quick way, then twice more from a fresh start of DStv
 
 # Live TV > All channels lists every channel in ascending order, 4 tiles to a row, from 101 at
@@ -35,6 +35,15 @@ LAST_TILE = max(TILES.values())
 def position(number):
     """Where a channel number falls in the list's ascending order."""
     return bisect.bisect_left(sorted(int(n) for n in TILES), int(number))
+
+def tile_of(number):
+    """Best guess at a channel's tile: where the banner has shown it, else counted on from the
+    nearest channel the banner has shown (the list's order holds even where its tiles are off,
+    e.g. 401 sits 3 tiles later than lineup.json says), else lineup.json's."""
+    if number in SEEN or not SEEN:
+        return TILES[number]
+    anchor = min(SEEN, key=lambda n: abs(position(n) - position(number)))
+    return max(0, min(SEEN[anchor] + position(number) - position(anchor), LAST_TILE))
 
 def number_at(tile):
     """Channel number at a tile, if we know it well enough to say so."""
@@ -307,6 +316,8 @@ async def attempt(tv, playing, tile, channel, delta, what, step, opening=None):
                 break
             at = SEEN.get(seen, tile)                     # a dropped key, if the banner has shown it elsewhere,
             to = tile if at != tile else tile + position(channel) - position(seen)  # else the list is off here
+            if at == tile:
+                remember(seen, tile)                      # so the channels around it are guessed right next time
             if to == at or not 0 <= to <= LAST_TILE:
                 break
             step(f"landed on {seen}, going on to tile {to}")
@@ -349,7 +360,7 @@ async def main(channel=None, delta=0):
         channel = DEFAULT_CHANNEL                         # nothing known to step from: start at the usual one
         step(f"not sure what's playing, going to {channel}")
     if channel:
-        tile = TILES[channel]
+        tile = tile_of(channel)
         if playing == tile and not was_off:
             step(f"already on {channel}")
             return
