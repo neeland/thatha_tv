@@ -102,6 +102,7 @@ Local Network access):
 | `scripts/update.sh` | pull the latest code on the Pi and restart the service (asks for the Pi's password) |
 | `scripts/restart.sh` | restart the service (asks for the Pi's password) |
 | `scripts/logs.sh` | show the log and follow it; `scripts/logs.sh 500` for more history |
+| `scripts/channel.sh 212` | change channel (or `up`, `down`, `on`), showing each step |
 | `scripts/status.sh` | running?, which code, what's playing, channels learned |
 | `scripts/fetch-pictures.sh` | copy the screenshots saved when something couldn't be read into `pi-pictures/` |
 
