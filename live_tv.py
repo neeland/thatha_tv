@@ -304,6 +304,12 @@ async def landed(scr, step):
     """Wait for the player banner and read the channel number off it; None if it can't be read."""
     _, frame = await scr.wait_for("player", 20)
     number = banner_channel(frame)
+    for _ in range(10):                                   # the banner stays up a few seconds: try more frames
+        if number is not None:
+            break
+        a = await scr.grab()
+        if classify(a)[0] == "player":
+            frame, number = a, banner_channel(a)
     if number is None:
         Image.fromarray(frame.astype("uint8")).save(UNREAD_BANNER)
         step(f"banner has digits we can't read yet, saved {UNREAD_BANNER.name}")
@@ -341,7 +347,7 @@ async def attempt(tv, playing, tile, channel, delta, what, step, opening=None):
                 await toast(tv, two_lines("⏳ NO MORE CHANNELS THIS WAY ⏳", "STAYING ON THIS CHANNEL"))
         step("ENTER, waiting for the picture")
         seen = await landed(scr, step)
-        for _ in range(2):                                # landed on the wrong channel: hop to the right one
+        for _ in range(4):                                # landed on the wrong channel: hop to the right one
             if not channel or seen in (channel, None):
                 break
             at = located(seen, tile)
@@ -359,12 +365,17 @@ async def attempt(tv, playing, tile, channel, delta, what, step, opening=None):
             if at is not None:
                 remember(seen, at)
             tile = tile_of(seen) if at is None else at
-        if channel and seen not in (channel, None):
+        if channel and seen is None:
+            raise RuntimeError(f"Couldn't read the banner to check it's {channel}")  # never assume: go again
+        if channel and seen != channel:
             raise Landed(f"Wanted {channel} but the TV is showing {seen}", tile)
+        if seen is None:                                  # CH+/CH-: playing, but where is unknown, so the
+            STATE_FILE.unlink(missing_ok=True)            # next change starts from a fresh start of DStv
+            step(f"playing tile {tile}, but couldn't read the banner to check which channel")
+            return tile
         STATE_FILE.write_text(f"{tile}\n")
-        if seen or channel or number_at(tile):
-            LAST_WATCHED.write_text(f"{seen or channel or number_at(tile)}\n")
-        step(f"playing tile {tile}: " + (seen or f"{channel or '?'} (banner unread, trusting the grid)"))
+        LAST_WATCHED.write_text(f"{seen}\n")
+        step(f"playing tile {tile}: {seen}, checked on the banner")
         return tile
     except Landed as err:
         STATE_FILE.write_text(f"{err.tile}\n")
