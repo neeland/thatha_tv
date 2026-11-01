@@ -93,6 +93,21 @@ sudo systemctl status thatha-tv      # is it running?
 journalctl -u thatha-tv -f           # live log: receiver found, each button and channel change
 ```
 
+From another computer on the home Wi-Fi, `scripts/` does the same over SSH
+(run `scripts/setup-ssh.sh` once first; use Terminal, not an app without
+Local Network access):
+
+| Script | Does |
+|---|---|
+| `scripts/update.sh` | pull the latest code on the Pi and restart the service (asks for the Pi's password) |
+| `scripts/restart.sh` | restart the service (asks for the Pi's password) |
+| `scripts/logs.sh` | show the log and follow it; `scripts/logs.sh 500` for more history |
+| `scripts/status.sh` | running?, which code, what's playing, channels learned |
+| `scripts/fetch-pictures.sh` | copy the screenshots saved when something couldn't be read into `pi-pictures/` |
+
+If `thatha-tv.local` doesn't resolve, give the Pi's address: `PI=thatha@192.168.10.x scripts/status.sh`.
+The log is also kept in `~/thatha_tv/thatha_tv.log`, which survives reboots.
+
 ## Command line
 
 ```sh
